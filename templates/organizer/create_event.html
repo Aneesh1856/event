@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - Event Attendance System</title>
+    {% set logo_cache_bust = '1.0' %}
+    <link rel="preload" href="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}"
+        as="image">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-navy: #002D62;
+            --accent-yellow: #FFC300;
+            --card-bg: #ffffff;
+            --muted-bg: #e0e0e0;
+            --text-dark: #333;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            background: var(--muted-bg);
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+        }
+
+        /* Top navbar matching the reference design */
+        .navbar {
+            background: var(--primary-navy);
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .navbar .amity-logo {
+            height: 44px;
+            width: auto;
+            margin-right: 18px;
+            display: block;
+        }
+
+        .navbar .nav-divider {
+            width: 2px;
+            height: 38px;
+            background: var(--accent-yellow);
+            margin: 0 18px;
+            border-radius: 2px;
+            display: block;
+        }
+
+        .navbar .nav-title {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+            font-size: 28px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Logout button matching reference */
+        .btn-logout {
+            background: var(--accent-yellow);
+            color: var(--primary-navy) !important;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s cubic-bezier(.4, 1.5, .5, 1), box-shadow 0.3s ease;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            margin-left: auto;
+        }
+
+        .btn-logout:hover {
+            background: #e6b300;
+            color: var(--primary-navy) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Cards matching reference design */
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: none;
+            padding: 0;
+        }
+
+        .card-header {
+            background: var(--accent-yellow);
+            color: var(--primary-navy);
+            border-bottom: none;
+            padding: 20px 30px;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0 !important;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .card h3 {
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .btn-primary {
+            background: var(--accent-yellow);
+            color: var(--primary-navy);
+            border: none;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover {
+            background: #e6b300;
+            color: var(--primary-navy);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-navy);
+            box-shadow: 0 0 0 0.2rem rgba(0, 45, 98, 0.25);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-navy);
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        .btn-outline-secondary {
+            border-color: var(--primary-navy);
+            color: var(--primary-navy);
+            font-weight: 600;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: var(--primary-navy);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}"
+                    alt="Amity University" class="amity-logo me-3" style="height: 40px; max-width: none;">
+                <div class="nav-divider me-3"></div>
+                <h1 class="nav-title mb-0">CREATE NEW EVENT</h1>
+            </div>
+            <div style="margin-left: auto; display: flex; align-items: center;">
+                <span style="color:#fff; font-weight:600; margin-right:20px;">
+                    <i class="fas fa-user"></i> {{ organizer_info.organizer_name or session.organizer_name or
+                    'Organizer' }}
+                </span>
+                <a class="btn-logout" href="{{ url_for('organizer_dashboard') }}">
+                    <i class="fas fa-arrow-left"></i>&nbsp;BACK TO DASHBOARD
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+            role="alert">
+            {{ message|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-calendar-plus me-2"></i> Create New Event</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" id="createEventForm">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="event_name" class="form-label">
+                                        Event Name <span class="required">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="event_name" name="event_name" required
+                                        placeholder="Enter event name (e.g., Annual Conference 2024)">
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="event_description" class="form-label">Event Description</label>
+                                    <textarea class="form-control" id="event_description" name="event_description"
+                                        rows="3" placeholder="Describe your event (optional)"></textarea>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="event_date" class="form-label">
+                                        Event Date <span class="required">*</span>
+                                    </label>
+                                    <input type="date" class="form-control" id="event_date" name="event_date" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="event_time" class="form-label">
+                                        Event Time <span class="required">*</span>
+                                    </label>
+                                    <input type="time" class="form-control" id="event_time" name="event_time" required>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="event_location" class="form-label">
+                                        Event Location <span class="required">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="event_location" name="event_location"
+                                        required
+                                        placeholder="Enter event location (e.g., Main Auditorium, Online, etc.)">
+                                </div>
+
+                                <!-- Geofencing Settings -->
+                                <div class="col-md-12 mb-3">
+                                    <div class="card" style="border: 2px solid var(--accent-yellow); padding: 0;">
+                                        <div class="card-header"
+                                            style="background-color: var(--accent-yellow); color: var(--primary-navy); padding: 15px 20px; margin: 0; border-radius: 8px 8px 0 0;">
+                                            <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i> Location-Based
+                                                Attendance (Geofencing)</h6>
+                                        </div>
+                                        <div class="card-body" style="padding: 20px;">
+                                            <div class="form-check mb-3">
+                                                <input class="form-check-input" type="checkbox" id="enable_geofencing"
+                                                    name="enable_geofencing">
+                                                <label class="form-check-label" for="enable_geofencing">
+                                                    <strong>Enable location-based attendance</strong>
+                                                </label>
+                                                <div class="form-text">Attendees must be physically present at the event
+                                                    location to mark attendance</div>
+                                            </div>
+
+                                            <div id="geofencing_settings" style="display: none;">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="event_latitude" class="form-label">Latitude</label>
+                                                        <input type="number" step="any" class="form-control"
+                                                            id="event_latitude" name="event_latitude"
+                                                            placeholder="e.g., 40.7589">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="event_longitude"
+                                                            class="form-label">Longitude</label>
+                                                        <input type="number" step="any" class="form-control"
+                                                            id="event_longitude" name="event_longitude"
+                                                            placeholder="e.g., -73.9851">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="geofence_radius" class="form-label">Attendance
+                                                            Radius (meters)</label>
+                                                        <input type="number" class="form-control" id="geofence_radius"
+                                                            name="geofence_radius" value="100" min="10" max="1000"
+                                                            placeholder="100">
+                                                        <div class="form-text">Students must be within this distance to
+                                                            mark attendance</div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Device Restrictions</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="one_device_only" name="one_device_only" checked>
+                                                            <label class="form-check-label" for="one_device_only">
+                                                                One attendance per device
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-text">Prevents multiple attendances from the
+                                                            same device</div>
+                                                    </div>
+                                                </div>
+
+
+
+                                                <div class="alert"
+                                                    style="background-color: #e3f2fd; border-color: var(--primary-navy); color: var(--primary-navy);">
+                                                    <i class="fas fa-info-circle"
+                                                        style="color: var(--accent-yellow);"></i>
+                                                    <strong>How to get coordinates:</strong>
+                                                    <ul class="mb-0 mt-2">
+                                                        <li>Go to <a href="https://www.google.com/maps" target="_blank"
+                                                                style="color: var(--primary-navy);">Google Maps</a></li>
+                                                        <li>Search for your event location</li>
+                                                        <li>Right-click on the exact location</li>
+                                                        <li>Copy the coordinates (first number is latitude, second is
+                                                            longitude)</li>
+                                                    </ul>
+                                                </div>
+
+                                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                                    onclick="getCurrentLocation()"
+                                                    style="border-color: var(--primary-navy); color: var(--primary-navy);">
+                                                    <i class="fas fa-location-arrow"></i> Use My Current Location
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="max_attendees" class="form-label">Maximum Attendees</label>
+                                    <input type="number" class="form-control" id="max_attendees" name="max_attendees"
+                                        min="1" placeholder="Leave blank for unlimited">
+                                    <div class="form-text">Set a limit on the number of attendees (optional)</div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Registration Status</label>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="registration_open"
+                                            name="registration_open" checked>
+                                        <label class="form-check-label" for="registration_open">
+                                            Allow new registrations
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {% if past_events %}
+                                <div class="col-md-12 mb-3 mt-2">
+                                    <div class="card" style="border: 1px solid #dee2e6; padding: 0;">
+                                        <div class="card-header"
+                                            style="background-color: #f8f9fa; color: var(--primary-navy); padding: 10px 20px; border-bottom: 1px solid #dee2e6;">
+                                            <h6 class="mb-0"><i class="fas fa-file-import me-2"></i> Import
+                                                Registrations (Optional)</h6>
+                                        </div>
+                                        <div class="card-body" style="padding: 20px;">
+                                            <label for="import_from_event" class="form-label">Import attendees from a
+                                                previous event:</label>
+                                            <select class="form-select" id="import_from_event" name="import_from_event">
+                                                <option value="">-- Do not import --</option>
+                                                {% for p_id, p_event in past_events.items() %}
+                                                <option value="{{ p_id }}">{{ p_event.event_name }} ({{
+                                                    p_event.event_date }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-text">
+                                                Selected event's attendees will be automatically registered for this new
+                                                event.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Create Event
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h6 class="card-title" style="color: var(--primary-navy);"><i class="fas fa-info-circle"
+                                style="color: var(--accent-yellow);"></i> What happens next?</h6>
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="mb-2" style="color: var(--primary-navy);">
+                                    <i class="fas fa-calendar-check fa-2x"></i>
+                                </div>
+                                <h6 style="color: var(--primary-navy);">1. Event Created</h6>
+                                <small class="text-muted">Your event will be saved and ready for registration</small>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="mb-2" style="color: var(--accent-yellow);">
+                                    <i class="fas fa-user-plus fa-2x"></i>
+                                </div>
+                                <h6 style="color: var(--primary-navy);">2. Share Registration</h6>
+                                <small class="text-muted">Share the registration link with potential attendees</small>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <div class="mb-2" style="color: var(--primary-navy);">
+                                    <i class="fas fa-qrcode fa-2x"></i>
+                                </div>
+                                <h6 style="color: var(--primary-navy);">3. Track Attendance</h6>
+                                <small class="text-muted">Use QR codes to track attendance during the event</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set minimum date to today
+        document.getElementById('event_date').min = new Date().toISOString().split('T')[0];
+
+        // Form submission enhancement
+        document.getElementById('createEventForm').addEventListener('submit', function (e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+            submitBtn.disabled = true;
+        });
+
+        // Auto-generate event ID display (for user reference)
+        function generateEventPreview() {
+            const eventName = document.getElementById('event_name').value;
+            const eventDate = document.getElementById('event_date').value;
+
+            if (eventName && eventDate) {
+                // This is just for display, actual ID will be generated on server
+                const preview = eventName.substring(0, 10) + '_' + eventDate.replace(/-/g, '');
+                console.log('Event preview ID:', preview);
+            }
+        }
+
+        document.getElementById('event_name').addEventListener('input', generateEventPreview);
+        document.getElementById('event_date').addEventListener('change', generateEventPreview);
+
+        // Geofencing toggle
+        document.getElementById('enable_geofencing').addEventListener('change', function () {
+            const settings = document.getElementById('geofencing_settings');
+            if (this.checked) {
+                settings.style.display = 'block';
+                // Make latitude and longitude required when geofencing is enabled
+                document.getElementById('event_latitude').required = true;
+                document.getElementById('event_longitude').required = true;
+            } else {
+                settings.style.display = 'none';
+                document.getElementById('event_latitude').required = false;
+                document.getElementById('event_longitude').required = false;
+            }
+        });
+
+        // Get current location function
+        function getCurrentLocation() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by this browser.');
+                return;
+            }
+
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+            button.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    document.getElementById('event_latitude').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('event_longitude').value = position.coords.longitude.toFixed(6);
+
+                    button.innerHTML = '<i class="fas fa-check"></i> Location Set';
+                    button.classList.remove('btn-outline-primary');
+                    button.classList.add('btn-success');
+
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-outline-primary');
+                        button.disabled = false;
+                    }, 2000);
+                },
+                function (error) {
+                    let errorMessage = 'Unable to get location. ';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Location access denied.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Location information unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Location request timed out.';
+                            break;
+                        default:
+                            errorMessage += 'Unknown error occurred.';
+                    }
+                    alert(errorMessage);
+
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+    </script>
+</body>
+
+</html>

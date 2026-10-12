@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Successful - {{ event.event_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #28a745;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .success-container {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            text-align: center;
+            max-width: 600px;
+            margin: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .success-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(40, 167, 69, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+        
+        .success-icon {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+            color: white;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 2rem;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+            animation: bounceIn 1s ease-out;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .event-details {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-left: 5px solid var(--success-color);
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 0.5rem 0;
+        }
+        
+        .detail-icon {
+            background: var(--primary-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .instructions-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateX(10px);
+        }
+        
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .btn-action {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .whatsapp-demo {
+            background: #25d366;
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+        
+        .whatsapp-demo::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 15px solid #25d366;
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            top: 70%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .countdown {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <!-- Floating Background Shapes -->
+        <div class="floating-shapes">
+            <i class="fas fa-star shape" style="font-size: 30px;"></i>
+            <i class="fas fa-heart shape" style="font-size: 25px;"></i>
+            <i class="fas fa-check-circle shape" style="font-size: 35px;"></i>
+        </div>
+
+        <div class="content">
+            <!-- Success Icon -->
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+
+            <!-- Success Message -->
+            <h2 class="text-success mb-3">Registration Successful!</h2>
+            <p class="lead text-muted">
+                You have successfully registered for <strong>{{ event.event_name }}</strong>
+            </p>
+
+            <!-- Event Details -->
+            <div class="event-details">
+                <h5 class="mb-3"><i class="fas fa-info-circle"></i> Event Details</h5>
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div>
+                        <strong>Date:</strong> {{ event.event_date }}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <strong>Time:</strong> {{ event.event_time }}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <strong>Location:</strong> {{ event.event_location }}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <strong>Registered Name:</strong> {{ attendee.name }}
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    {% if attendee.whatsapp_number %}
+                    <div>
+                        <strong>Phone:</strong> {{ attendee.whatsapp_number }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions-card">
+                <h5><i class="fas fa-mobile-alt"></i> How to Mark Attendance</h5>
+                <p class="text-muted mb-4">On the day of the event, follow these steps to mark your attendance:</p>
+                
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Find the QR Code</strong><br>
+                        <small class="text-muted">Look for the attendance QR code displayed at the event venue</small>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>Scan with Your Phone</strong><br>
+                        <small class="text-muted">Use your phone's camera or any QR code scanner app</small>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>Scan QR Code at Event</strong><br>
+                        <small class="text-muted">Use your phone camera to scan the attendance QR code at the event venue</small>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <strong>Mark Attendance Instantly</strong><br>
+                        <small class="text-muted">Your attendance will be automatically recorded when you scan the QR code</small>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Event Countdown (if event is in future) -->
+            {% if days_until_event > 0 %}
+            <div class="alert alert-info">
+                <h6><i class="fas fa-hourglass-half"></i> Event Countdown</h6>
+                <div class="countdown">
+                    {{ days_until_event }} days {{ hours_until_event }} hours remaining
+                </div>
+            </div>
+            {% elif days_until_event == 0 %}
+            <div class="alert alert-success">
+                <h6><i class="fas fa-calendar-check"></i> Event is Today!</h6>
+                <p class="mb-0">Don't forget to mark your attendance when you arrive at the venue.</p>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="mt-4">
+                <button class="btn btn-success btn-action" onclick="addToCalendar()">
+                    <i class="fas fa-calendar-plus"></i> Add to Calendar
+                </button>
+                <button class="btn btn-info btn-action" onclick="shareEvent()">
+                    <i class="fas fa-share-alt"></i> Share Event
+                </button>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="mt-4 pt-4 border-top">
+                <h6>Need Help?</h6>
+                <p class="text-muted mb-2">
+                    Contact the event organizer: <strong>{{ event.organizer_name }}</strong>
+                </p>
+                <p class="text-muted">
+                    <i class="fas fa-envelope"></i> {{ event.organizer_email | default('Contact via event platform') }} | 
+                    <i class="fas fa-phone"></i> {{ event.organizer_phone | default('N/A') }}
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-4">
+                <small class="text-muted">
+                    Registration ID: {{ attendee.registration_id }}<br>
+                    Registered on: {{ attendee.registration_time }}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add to calendar functionality
+        function addToCalendar() {
+            const event = {
+                title: "{{ event.event_name }}",
+                start: "{{ event.event_date }}T{{ event.event_time }}:00",
+                location: "{{ event.event_location }}",
+                description: "{{ event.event_description }}"
+            };
+
+            // Create Google Calendar URL
+            const startDate = new Date(event.start).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const endDate = new Date(new Date(event.start).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${startDate}/${endDate}&location=${encodeURIComponent(event.location)}&details=${encodeURIComponent(event.description)}`;
+            
+            window.open(googleCalendarUrl, '_blank');
+        }
+
+        // Share event functionality
+        function shareEvent() {
+            if (navigator.share) {
+                navigator.share({
+                    title: "{{ event.event_name }}",
+                    text: "I'm attending {{ event.event_name }} on {{ event.event_date }}!",
+                    url: window.location.origin + "/register/{{ event.event_id }}"
+                });
+            } else {
+                // Fallback: copy to clipboard
+                const shareText = `I'm attending {{ event.event_name }} on {{ event.event_date }}! Register here: ${window.location.origin}/register/{{ event.event_id }}`;
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('Event details copied to clipboard!');
+                });
+            }
+        }
+
+        // Show success animation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add some interactive effects
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, index) => {
+                step.style.opacity = '0';
+                step.style.transform = 'translateX(-50px)';
+                
+                setTimeout(() => {
+                    step.style.transition = 'all 0.5s ease';
+                    step.style.opacity = '1';
+                    step.style.transform = 'translateX(0)';
+                }, (index + 1) * 200);
+            });
+
+            // Confetti effect (simple version)
+            setTimeout(() => {
+                createConfetti();
+            }, 1000);
+        });
+
+        // Simple confetti effect
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#28a745', '#ffc107', '#e74c3c'];
+            const container = document.body;
+
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.top = '-10px';
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.pointerEvents = 'none';
+                    confetti.style.zIndex = '9999';
+                    confetti.style.opacity = '0.8';
+
+                    container.appendChild(confetti);
+
+                    const animation = confetti.animate([
+                        { transform: 'translateY(0px) rotate(0deg)', opacity: 0.8 },
+                        { transform: `translateY(${window.innerHeight + 100}px) rotate(720deg)`, opacity: 0 }
+                    ], {
+                        duration: 3000 + Math.random() * 2000,
+                        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    });
+
+                    animation.onfinish = () => {
+                        confetti.remove();
+                    };
+                }, i * 50);
+            }
+        }
+    </script>
+</body>
+</html>

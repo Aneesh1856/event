@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Data - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Attendance System</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Firebase Database Overview</h1>
+            <div>
+                <form method="POST" action="{{ url_for('backup_data') }}" class="d-inline">
+                    <button type="submit" class="btn btn-warning me-2">Create Backup</button>
+                </form>
+                <form method="POST" action="{{ url_for('sync_local_to_firebase') }}" class="d-inline">
+                    <button type="submit" class="btn btn-primary me-2">Sync All to Firebase</button>
+                </form>
+                <form method="POST" action="{{ url_for('sync_subjects_to_firebase_route') }}" class="d-inline">
+                    <button type="submit" class="btn btn-success">Sync Subjects</button>
+                </form>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Analytics Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5>Total Teachers</h5>
+                        <h2>{{ teachers|length }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5>Total Subjects</h5>
+                        <h2>{{ subjects|length }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5>Total Students</h5>
+                        <h2>{{ analytics.total_students }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5>Total Sessions</h5>
+                        <h2>{{ analytics.total_sessions }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teachers Data -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Teachers Data in Firebase</h5>
+            </div>
+            <div class="card-body">
+                {% if teachers %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Teacher Name</th>
+                                    <th>Teacher ID</th>
+                                    <th>Email</th>
+                                    <th>Subjects</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if teachers and teachers is mapping %}
+                                    {% for username, teacher in teachers.items() %}
+                                    <tr>
+                                        <td>{{ username }}</td>
+                                        <td>{{ teacher.get('teacher_name', 'N/A') }}</td>
+                                        <td>{{ teacher.get('teacher_id', 'N/A') }}</td>
+                                        <td>{{ teacher.get('email', 'N/A') }}</td>
+                                        <td>
+                                            {% if teacher.get('subjects') %}
+                                                {% if teacher.subjects is mapping %}
+                                                    {% for code, subject in teacher.subjects.items() %}
+                                                        <span class="badge bg-secondary me-1">{{ code }}</span>
+                                                    {% endfor %}
+                                                {% elif teacher.subjects is iterable and teacher.subjects is not string %}
+                                                    {% for subject in teacher.subjects %}
+                                                        <span class="badge bg-secondary me-1">{{ subject }}</span>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <span class="badge bg-secondary me-1">{{ teacher.subjects }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">No subjects</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No teacher data available or data format error</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No teachers data found in Firebase.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Subjects Data -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Subjects Data in Firebase</h5>
+            </div>
+            <div class="card-body">
+                {% if subjects %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th>Sections</th>
+                                    <th>Assigned Teachers</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if subjects and subjects is mapping %}
+                                    {% for code, subject in subjects.items() %}
+                                    <tr>
+                                        <td>{{ code }}</td>
+                                        <td>{{ subject.get('subject_name', 'N/A') }}</td>
+                                    <td>
+                                        {% for section in subject.get('sections', []) %}
+                                            <span class="badge bg-info me-1">{{ section }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for teacher in subject.get('assigned_teachers', []) %}
+                                            <span class="badge bg-success me-1">{{ teacher }}</span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No subject data available or data format error</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No subjects data found in Firebase.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Improved auto logout - only logout on actual tab/window close, not form submissions
+        let isFormSubmitting = false;
+        let isNavigating = false;
+        
+        // Track form submissions
+        document.addEventListener('submit', function() {
+            isFormSubmitting = true;
+            setTimeout(() => {
+                isFormSubmitting = false;
+            }, 1000);
+        });
+        
+        // Track navigation
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.closest('a')) {
+                isNavigating = true;
+                setTimeout(() => {
+                    isNavigating = false;
+                }, 1000);
+            }
+        });
+        
+        // Auto logout when tab/window is closed
+        window.addEventListener('beforeunload', function() {
+            // Don't logout if user is submitting a form or navigating
+            if (!isFormSubmitting && !isNavigating) {
+                navigator.sendBeacon('/api/auto_logout', new FormData());
+            }
+        });
+        
+        window.addEventListener('unload', function() {
+            // Only logout if not due to form submission or navigation
+            if (!isFormSubmitting && !isNavigating) {
+                navigator.sendBeacon('/api/auto_logout', new FormData());
+            }
+        });
+    </script>
+</body>
+</html>

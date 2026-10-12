@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Events - Admin Panel</title>
+    {% set logo_cache_bust = '1.0' %}
+    <link rel="preload" href="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}" as="image">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-navy: #002D62;
+            --accent-yellow: #FFC300;
+            --card-bg: #ffffff;
+            --muted-bg: #e0e0e0;
+            --text-dark: #333;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        body {
+            background: var(--muted-bg);
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+        
+        /* Top navbar matching the organizer design */
+        .navbar{ 
+            background: var(--primary-navy); 
+            padding: 15px 0; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+        .navbar .container{ 
+            display: flex; 
+            justify-content: flex-start; 
+            align-items: center; 
+        }
+        .navbar .amity-logo{ 
+            height: 44px; 
+            width: auto; 
+            margin-right: 18px; 
+            display: block; 
+        }
+        .navbar .nav-divider{ 
+            width: 2px; 
+            height: 38px; 
+            background: var(--accent-yellow); 
+            margin: 0 18px; 
+            border-radius: 2px; 
+            display: block; 
+        }
+        .navbar .nav-title{ 
+            color: white; 
+            margin: 0; 
+            font-weight: 700; 
+            font-size: 28px; 
+            text-transform: uppercase; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        /* Logout button matching organizer design */
+        .btn-logout{ 
+            background: var(--accent-yellow); 
+            color: var(--primary-navy) !important; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 700; 
+            transition: background-color 0.3s ease, transform 0.2s cubic-bezier(.4,1.5,.5,1), box-shadow 0.3s ease; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase; 
+            text-decoration: none; 
+            margin-left: auto;
+        }
+        .btn-logout:hover{ 
+            background: #e6b300; 
+            color: var(--primary-navy) !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+        }
+        
+        .admin-card {
+            background: white;
+            border-radius: 0px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            height: 100%;
+        }
+        
+        .admin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Button styling improvements */
+        .btn {
+            border-radius: 0px;
+            font-weight: 600;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--accent-yellow);
+            color: var(--primary-navy);
+            border: none;
+            border-radius: 0px;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #e6b300;
+            color: var(--primary-navy);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--accent-yellow);
+            color: var(--primary-navy);
+        }
+
+        .btn-warning:hover {
+            background: #e6b300;
+            color: var(--primary-navy);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            color: white;
+        }
+
+        .text-primary {
+            color: var(--primary-navy) !important;
+        }
+
+        .bg-primary {
+            background-color: var(--primary-navy) !important;
+        }
+
+        .card-title {
+            color: var(--primary-navy);
+            font-weight: 700;
+        }
+
+        /* Card header improvements */
+        .card-header.bg-primary {
+            background: var(--primary-navy) !important;
+            color: white;
+            font-weight: 600;
+        }
+
+        .card-header.bg-success {
+            background: var(--accent-yellow) !important;
+            color: var(--primary-navy);
+            font-weight: 600;
+        }
+
+        .card-header.bg-info {
+            background: var(--primary-navy) !important;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Card spacing and consistency */
+        .card-header {
+            border-bottom: 1px solid #e9ecef;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Table improvements */
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background: var(--primary-navy);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .nav-admin {
+            background: var(--primary-navy);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .amity-logo {
+            height: 40px;
+            width: auto;
+            margin-right: 15px;
+        }
+
+        .nav-divider {
+            width: 2px;
+            height: 30px;
+            background: var(--accent-yellow);
+            margin: 0 15px;
+            border-radius: 2px;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--accent-yellow) !important;
+        }
+
+        .card-title {
+            color: var(--primary-navy);
+            font-weight: 700;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-active { background-color: #d4edda; color: #155724; }
+        .status-inactive { background-color: #f8d7da; color: #721c24; }
+        .status-cancelled { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}" alt="Amity University" class="amity-logo me-3" style="height: 40px; max-width: none;">
+                <div class="nav-divider me-3"></div>
+                <h1 class="nav-title mb-0">EVENTS MANAGEMENT</h1>
+            </div>
+            <div style="margin-left: auto; display: flex; align-items: center;">
+                <span style="color:#fff; font-weight:600; margin-right:20px;">
+                    <i class="fas fa-user-shield"></i> Administrator
+                </span>
+                <a class="btn-logout" href="{{ url_for('admin_dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i>&nbsp;DASHBOARD
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+        <div class="admin-card">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-calendar-alt"></i> All Events Management</h3>
+            </div>
+            <div class="card-body">
+                {% if events %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Event Name</th>
+                                    <th>Organizer</th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Attendees</th>
+                                    <th>Status</th>
+                                    <th>Features</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ event.event_name }}</strong><br>
+                                        <small class="text-muted">ID: {{ event.event_id }}</small>
+                                    </td>
+                                    <td>
+                                        {{ event.organizer_name }}<br>
+                                        <small class="text-muted">{{ event.organizer_id }}</small>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-calendar"></i> {{ event.event_date }}<br>
+                                        <i class="fas fa-clock"></i> {{ event.event_time }}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-map-marker-alt"></i> {{ event.event_location }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ event.attendee_count }}</span>
+                                        {% if event.capacity != 'Unlimited' %}
+                                            / {{ event.capacity }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-calendar-check text-success"></i> Active
+                                    </td>
+                                    <td>
+                                        {% if event.geofencing_enabled %}
+                                            <span class="badge bg-success"><i class="fas fa-map-marked-alt"></i> Geofenced</span>
+                                        {% else %}
+                                            <span class="badge bg-primary"><i class="fas fa-calendar-alt"></i> Standard</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Events Found</h4>
+                        <p class="text-muted">No events have been created yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

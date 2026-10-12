@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Attendance System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto logout functionality for all authenticated pages
+        function setupAutoLogout() {
+            let isNavigating = false;
+            let isSubmittingForm = false;
+            
+            // Track form submissions
+            document.addEventListener('submit', function() {
+                isSubmittingForm = true;
+                setTimeout(() => {
+                    isSubmittingForm = false;
+                }, 2000);
+            });
+            
+            // Track navigation (clicking links)
+            document.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A' || e.target.closest('a')) {
+                    isNavigating = true;
+                    setTimeout(() => {
+                        isNavigating = false;
+                    }, 1000);
+                }
+            });
+            
+            // Auto logout when tab/window is closed (but not during navigation/form submission)
+            window.addEventListener('beforeunload', function() {
+                if (!isNavigating && !isSubmittingForm) {
+                    navigator.sendBeacon('/api/auto_logout', new FormData());
+                }
+            });
+            
+            // Handle page unload (when navigating away or closing)
+            window.addEventListener('unload', function() {
+                if (!isNavigating && !isSubmittingForm) {
+                    navigator.sendBeacon('/api/auto_logout', new FormData());
+                }
+            });
+            
+            // Optional: Handle visibility change for enhanced security
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') {
+                    console.log('Tab is now hidden');
+                    // You can add additional security measures here
+                    // For example, start a timer to logout after extended inactivity
+                } else {
+                    console.log('Tab is now visible');
+                }
+            });
+            
+            // Optional: Auto logout after extended inactivity (30 minutes)
+            let inactivityTimer;
+            const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+            
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(function() {
+                    // Auto logout due to inactivity
+                    fetch('/api/auto_logout', {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    }).then(() => {
+                        alert('Session expired due to inactivity. Please login again.');
+                        window.location.href = '/';
+                    });
+                }, INACTIVITY_TIMEOUT);
+            }
+            
+            // Reset timer on user activity
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(function(event) {
+                document.addEventListener(event, resetInactivityTimer, true);
+            });
+            
+            // Initialize inactivity timer
+            resetInactivityTimer();
+        }
+        
+        // Initialize auto logout when DOM is loaded
+        document.addEventListener('DOMContentLoaded', setupAutoLogout);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

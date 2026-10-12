@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - Event Management</title>
+    {% set logo_cache_bust = '1.0' %}
+    <link rel="preload" href="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}" as="image">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-navy: #002D62;
+            --accent-yellow: #FFC300;
+            --card-bg: #ffffff;
+            --muted-bg: #e0e0e0;
+            --text-dark: #333;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        body {
+            background: var(--muted-bg);
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+        
+        .admin-card {
+            background: white;
+            border-radius: 0px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            height: 100%;
+        }
+        
+        .admin-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card {
+            background: white;
+            color: var(--primary-navy);
+            border-radius: 0px;
+            padding: 35px 25px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+            height: 100%;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .stat-card h3 {
+            color: var(--accent-yellow);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        .stat-card i {
+            color: var(--primary-navy);
+            margin-bottom: 15px;
+        }
+
+        .stat-card p {
+            color: var(--primary-navy);
+            font-weight: 600;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        /* Top navbar matching the organizer design */
+        .navbar{ 
+            background: var(--primary-navy); 
+            padding: 15px 0; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+        .navbar .container{ 
+            display: flex; 
+            justify-content: flex-start; 
+            align-items: center; 
+        }
+        .navbar .amity-logo{ 
+            height: 44px; 
+            width: auto; 
+            margin-right: 18px; 
+            display: block; 
+        }
+        .navbar .nav-divider{ 
+            width: 2px; 
+            height: 38px; 
+            background: var(--accent-yellow); 
+            margin: 0 18px; 
+            border-radius: 2px; 
+            display: block; 
+        }
+        .navbar .nav-title{ 
+            color: white; 
+            margin: 0; 
+            font-weight: 700; 
+            font-size: 28px; 
+            text-transform: uppercase; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        /* Logout button matching organizer design */
+        .btn-logout{ 
+            background: var(--accent-yellow); 
+            color: var(--primary-navy) !important; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 700; 
+            transition: background-color 0.3s ease, transform 0.2s cubic-bezier(.4,1.5,.5,1), box-shadow 0.3s ease; 
+            letter-spacing: 0.5px; 
+            text-transform: uppercase; 
+            text-decoration: none; 
+            margin-left: auto;
+        }
+        .btn-logout:hover{ 
+            background: #e6b300; 
+            color: var(--primary-navy) !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+        }
+
+        .btn-primary {
+            background: var(--accent-yellow);
+            color: var(--primary-navy);
+            border: none;
+            border-radius: 0px;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #e6b300;
+            color: var(--primary-navy);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-primary {
+            border-color: var(--primary-navy);
+            color: var(--primary-navy);
+            border-radius: 0px;
+            font-weight: 600;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-navy);
+            border-color: var(--primary-navy);
+        }
+
+        .text-primary {
+            color: var(--primary-navy) !important;
+        }
+
+        .bg-primary {
+            background-color: var(--primary-navy) !important;
+        }
+
+        .card-title {
+            color: var(--primary-navy);
+            font-weight: 700;
+        }
+
+        /* Navigation improvements */
+        .navbar-nav {
+            background: transparent;
+            border-radius: 0px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            padding: 10px 25px !important;
+            margin: 0 8px;
+            border-radius: 0px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 1rem;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            text-transform: none;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--primary-navy) !important;
+            background: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+        }
+
+        .navbar-nav .nav-link.active {
+            color: var(--primary-navy) !important;
+            background: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+            font-weight: 600;
+        }
+
+        .navbar-nav .nav-link i {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        .quick-action-card {
+            border: 2px solid var(--primary-navy);
+            border-radius: 0px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-card:hover {
+            background: var(--primary-navy);
+            color: white;
+        }
+
+        .quick-action-card:hover .text-primary {
+            color: var(--accent-yellow) !important;
+        }
+
+        /* Dashboard header with better spacing */
+        .dashboard-header {
+            text-align: center;
+            padding: 40px 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        /* Main heading styling like login page */
+        .main-heading {
+            color: var(--primary-navy);
+            font-weight: 700;
+            font-size: 36px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .main-subheading {
+            color: var(--text-dark);
+            font-weight: 400;
+            font-size: 18px;
+            margin-bottom: 0;
+            opacity: 0.8;
+        }
+
+        /* Card header improvements */
+        .card-header.bg-primary {
+            background: var(--primary-navy) !important;
+            color: white;
+            font-weight: 600;
+        }
+
+        .card-header.bg-success {
+            background: var(--accent-yellow) !important;
+            color: var(--primary-navy);
+            font-weight: 600;
+        }
+
+        .card-header.bg-info {
+            background: var(--primary-navy) !important;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Button styling improvements */
+        .btn {
+            border-radius: 0px;
+            font-weight: 600;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--accent-yellow);
+            color: var(--primary-navy);
+        }
+
+        .btn-warning:hover {
+            background: #e6b300;
+            color: var(--primary-navy);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            color: white;
+        }
+
+        /* Equal height cards */
+        .equal-height-row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .equal-height-row > [class*="col-"] {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Quick action buttons equal height */
+        .quick-actions-row .col-lg-3,
+        .quick-actions-row .col-lg-6,
+        .quick-actions-row .col-md-6 {
+            margin-bottom: 15px;
+        }
+
+        .quick-actions-row .btn {
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+
+        .quick-actions-row .btn i {
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive quick actions */
+        @media (max-width: 992px) {
+            .quick-actions-row .col-lg-3 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+            
+            .quick-actions-row .col-lg-6 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+
+        /* Container and layout improvements */
+        .container {
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+
+        /* Card spacing and consistency */
+        .card-header {
+            border-bottom: 1px solid #e9ecef;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .list-group-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        /* System status improvements */
+        .system-status-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .system-status-item i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .system-status-item p {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary-navy);
+        }
+
+        .system-status-item small {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .quick-actions-row .col-lg-3,
+            .quick-actions-row .col-lg-6,
+            .quick-actions-row .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            .stat-card {
+                margin-bottom: 20px;
+            }
+            
+            .navbar-nav {
+                background: transparent;
+                padding: 0;
+                margin: 15px 0;
+            }
+            
+            .navbar-nav .nav-link {
+                margin: 5px 0;
+                text-align: center;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .navbar-brand .brand-text {
+                font-size: 18px;
+            }
+            
+            .amity-logo {
+                height: 32px;
+            }
+            
+            .nav-divider {
+                height: 24px;
+                margin: 0 10px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .quick-actions-row .col-lg-3,
+            .quick-actions-row .col-lg-6,
+            .quick-actions-row .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .navbar-brand .brand-text {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <img src="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}" alt="Amity University" class="amity-logo me-3" style="height: 40px; max-width: none;">
+                <div class="nav-divider me-3"></div>
+                <h1 class="nav-title mb-0">ADMIN DASHBOARD</h1>
+            </div>
+            <div style="margin-left: auto; display: flex; align-items: center;">
+                <span style="color:#fff; font-weight:600; margin-right:20px;">
+                    <i class="fas fa-user-shield"></i> Administrator
+                </span>
+                <a class="btn-logout" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt"></i>&nbsp;LOGOUT
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+        <!-- Statistics Cards with Better Spacing -->
+        <div class="row mb-5 g-4 equal-height-row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-calendar-alt fa-2x mb-3"></i>
+                    <h3>{{ all_events|length }}</h3>
+                    <p>Total Events</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-calendar-check fa-2x mb-3"></i>
+                    <h3>{{ active_events }}</h3>
+                    <p>Active Events</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-users fa-2x mb-3"></i>
+                    <h3>{{ all_organizers|length }}</h3>
+                    <p>Event Organizers</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="stat-card">
+                    <i class="fas fa-graduation-cap fa-2x mb-3"></i>
+                    <h3>{{ total_students }}</h3>
+                    <p>Students in Database</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions with Better Spacing -->
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="admin-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-bolt me-2"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row quick-actions-row g-4">
+                            <!-- Primary Actions -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <button onclick="viewAllEvents()" class="btn btn-info w-100 py-3">
+                                    <i class="fas fa-calendar-alt fa-lg mb-2"></i><br>View All Events
+                                </button>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <button onclick="generateReports()" class="btn btn-warning w-100 py-3">
+                                    <i class="fas fa-chart-bar fa-lg mb-2"></i><br>Generate Reports
+                                </button>
+                            </div>
+                            
+                            <!-- Add New Items -->
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="{{ url_for('admin_add_organizer') }}" class="btn btn-success w-100 py-3">
+                                    <i class="fas fa-user-plus fa-lg mb-2"></i><br>Add Organizer
+                                </a>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="/admin/students" class="btn btn-primary w-100 py-3">
+                                    <i class="fas fa-graduation-cap fa-lg mb-2"></i><br>Add Student
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- System Actions -->
+                        <div class="row quick-actions-row mt-2">
+                            <div class="col-lg-6 col-md-6 mb-3">
+                                <button onclick="debugData()" class="btn btn-secondary w-100">
+                                    <i class="fas fa-bug"></i><br>Debug System Data
+                                </button>
+                            </div>
+                            <div class="col-lg-6 col-md-6 mb-3">
+                                <button onclick="fixData()" class="btn btn-danger w-100">
+                                    <i class="fas fa-wrench"></i><br>Fix Data Issues
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Events & Organizers -->
+        <div class="row mb-4 equal-height-row">
+            <div class="col-md-6 mb-4">
+                <div class="admin-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="fas fa-calendar-alt"></i> Recent Events</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if all_events %}
+                            <div class="list-group list-group-flush">
+                                {% for event in all_events[:5] %}
+                                <div class="list-group-item border-0">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ event.event_name }}</h6>
+                                            <small class="text-muted">{{ event.organizer_name }} | {{ event.event_date }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center">No events created yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="admin-card">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="fas fa-users"></i> Event Organizers</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if all_organizers %}
+                            <div class="list-group list-group-flush">
+                                {% for organizer in all_organizers[:5] %}
+                                <div class="list-group-item border-0">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ organizer.name }}</h6>
+                                            {% if organizer.email %}
+                                            <small class="text-muted">{{ organizer.email }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <small class="text-muted">{{ organizer.event_count }} events</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if all_organizers|length > 5 %}
+                            <div class="mt-2 text-center">
+                                <a href="{{ url_for('admin_organizers') }}" class="btn btn-sm btn-outline-primary">
+                                    View All Organizers
+                                </a>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted text-center">No organizers registered yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="admin-card">
+                    <div class="card-header bg-info text-white">
+                        <h5><i class="fas fa-server"></i> System Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="system-status-item">
+                                    <i class="fas fa-database text-success"></i>
+                                    <p>Database</p>
+                                    <small class="text-success">Connected</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="system-status-item">
+                                    <i class="fas fa-qrcode text-success"></i>
+                                    <p>QR System</p>
+                                    <small class="text-success">Operational</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="system-status-item">
+                                    <i class="fas fa-globe text-success"></i>
+                                    <p>Web System</p>
+                                    <small class="text-success">Active</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="system-status-item">
+                                    <i class="fas fa-clock text-info"></i>
+                                    <p>Last Update</p>
+                                    <small class="text-muted">{{ current_time }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function viewAllEvents() {
+            window.location.href = '/admin/events';
+        }
+        
+        function generateReports() {
+            window.location.href = '/admin/reports';
+        }
+        
+        function debugData() {
+            window.open('/debug/organizers', '_blank');
+        }
+        
+        function fixData() {
+            if (confirm('This will attempt to fix organizer data format inconsistencies. Continue?')) {
+                fetch('/admin/fix-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Data fix completed: ' + data.message);
+                            location.reload();
+                        } else {
+                            alert('Error fixing data: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error: ' + error.message);
+                    });
+            }
+        }
+        
+        function systemSettings() {
+            alert('System settings functionality coming soon');
+        }
+        
+        // Track navigation
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.closest('a')) {
+                isNavigating = true;
+                setTimeout(() => {
+                    isNavigating = false;
+                }, 1000);
+            }
+        });
+        
+        // Auto logout when tab/window is closed
+        window.addEventListener('beforeunload', function() {
+            // Don't logout if user is submitting a form or navigating
+            if (!isFormSubmitting && !isNavigating) {
+                navigator.sendBeacon('/api/auto_logout', new FormData());
+            }
+        });
+        
+        // Handle page unload (when navigating away or closing)
+        window.addEventListener('unload', function() {
+            // Only logout if not due to form submission or navigation
+            if (!isFormSubmitting && !isNavigating) {
+                navigator.sendBeacon('/api/auto_logout', new FormData());
+            }
+        });
+    </script>
+</body>
+</html>

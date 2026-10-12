@@ -1,0 +1,30 @@
+# Python virtual environments
+don/
+venv/
+env/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Firebase credentials (keep secure)
+firebase-credentials.json
+credentials.json
+
+# Debug/setup scripts (not needed for production)
+# debug_organizers.py
+# fix_existing_registrations.py
+# setup_accounts.py
+# setup_initial_data.py
+# show_login_credentials.py
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

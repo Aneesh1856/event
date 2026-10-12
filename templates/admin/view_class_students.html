@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Class Students - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('admin_attendance_management') }}">
+                <i class="fas fa-arrow-left me-2"></i>Attendance System - Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-users me-2"></i>Class Students</h1>
+                        <p class="text-muted mb-0">{{ subject_code }} - {{ subject_name }} | Section {{ section }}</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('admin_attendance_management') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Management
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        {{ message|safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Class Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Subject:</strong><br>
+                                <span class="text-primary">{{ subject_code }} - {{ subject_name }}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Section:</strong><br>
+                                <span class="badge bg-primary fs-6">{{ section }}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Total Students:</strong><br>
+                                <span class="text-success fs-5">{{ students_data|length }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Last Updated:</strong><br>
+                                <span class="text-muted">{{ class_info.imported_date[:10] if class_info.imported_date else 'Unknown' }}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>Source:</strong><br>
+                                <span class="badge bg-info">{{ 'Excel Upload' if class_info.source == 'excel_upload' else 'Google Sheets' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Student List</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if students_data %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>S.No.</th>
+                                            <th>Enrollment No.</th>
+                                            <th>Student Name</th>
+                                            <th>WhatsApp Number</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students_data %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td><strong>{{ student.enrollment_no }}</strong></td>
+                                                <td>{{ student.student_name }}</td>
+                                                <td>
+                                                    {% if student.whatsapp_number %}
+                                                        <span class="text-success">
+                                                            <i class="fab fa-whatsapp me-1"></i>{{ student.whatsapp_number }}
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="text-muted">Not provided</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if student.whatsapp_number %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">No WhatsApp</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Statistics -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <div class="row text-center">
+                                                <div class="col-md-4">
+                                                    <h5 class="text-primary">{{ students_data|length }}</h5>
+                                                    <small class="text-muted">Total Students</small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h5 class="text-success">
+                                                        {{ students_data|selectattr('whatsapp_number')|list|length }}
+                                                    </h5>
+                                                    <small class="text-muted">With WhatsApp</small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <h5 class="text-warning">
+                                                        {{ students_data|length - students_data|selectattr('whatsapp_number')|list|length }}
+                                                    </h5>
+                                                    <small class="text-muted">Without WhatsApp</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Students Found</h5>
+                                <p class="text-muted">No student data has been uploaded for this class yet.</p>
+                                <a href="{{ url_for('admin_attendance_management') }}" class="btn btn-primary">
+                                    <i class="fas fa-upload me-2"></i>Upload Student List
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

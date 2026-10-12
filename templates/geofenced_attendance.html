@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance - {{ event.event_name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .event-header {
+            margin-bottom: 30px;
+        }
+
+        .event-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .event-details {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .status-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .status-message {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border-left: 4px solid #ff4444;
+            color: #cc0000;
+        }
+
+        .success {
+            background: #e6ffe6;
+            border-left: 4px solid #44ff44;
+            color: #006600;
+        }
+
+        .warning {
+            background: #fff8e6;
+            border-left: 4px solid #ffaa00;
+            color: #cc6600;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .location-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .device-info {
+            font-size: 10px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="event-header">
+            <h1 class="event-title">{{ event.event_name }}</h1>
+            <div class="event-details">
+                📅 {{ event.event_date }} at {{ event.event_time }}<br>
+                📍 {{ event.event_location }}
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div id="statusCard" class="status-card">
+            <div id="statusIcon" class="status-icon">📍</div>
+            <div id="statusTitle" class="status-title">Checking Location...</div>
+            <div id="statusMessage" class="status-message">Please allow location access to mark attendance</div>
+        </div>
+
+        <!-- Loading Animation -->
+        <div id="loadingDiv" class="loading">
+            <div class="spinner"></div>
+            <p>Processing your attendance...</p>
+        </div>
+
+        <!-- Attendance Form -->
+        <div id="attendanceForm" style="display: none;">
+            <div class="form-group">
+                <label class="form-label" for="enrollmentNo">Enrollment Number:</label>
+                <input type="text" id="enrollmentNo" class="form-input" placeholder="Enter your enrollment number"
+                    oninput="lookupRegistration()" autocomplete="off">
+                <div id="enrollmentMessage" style="margin-top: 5px; font-size: 14px;"></div>
+            </div>
+
+            <!-- Auto-filled Information Display -->
+            <div id="studentInfo" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Name:</label>
+                    <div id="displayName" class="form-input" style="background-color: #f5f5f5; color: #666;"></div>
+                </div>
+
+                <div id="schoolSection" class="form-group">
+                    <label class="form-label">School/Institution:</label>
+                    <div id="displaySchool" class="form-input" style="background-color: #f5f5f5; color: #666;"></div>
+                </div>
+
+                <div id="branchSection" class="form-group">
+                    <label class="form-label">Branch & Semester:</label>
+                    <div id="displayBranchSemester" class="form-input" style="background-color: #f5f5f5; color: #666;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- On-the-fly Registration Form (Hidden by default) -->
+            <div id="onTheFlyRegistration" style="display: none; border: 1px dashed #667eea; padding: 15px; border-radius: 10px; margin-bottom: 20px; background-color: #f0f4ff;">
+                <h4 style="font-size: 16px; margin-bottom: 15px; color: #764ba2;">✨ Quick Registration</h4>
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Complete your details to register and mark attendance in one step.</p>
+                
+                <div class="form-group">
+                    <label class="form-label" for="regName">Full Name: <span style="color: red;">*</span></label>
+                    <input type="text" id="regName" class="form-input" placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="regEmail">Email Address: <span style="color: red;">*</span></label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="Enter your email address">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="regSchool">School/College: <span style="color: red;">*</span></label>
+                    <input type="text" id="regSchool" class="form-input" placeholder="Enter your school name">
+                </div>
+                
+                <div class="row" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 2;">
+                        <label class="form-label" for="regBranch">Branch: <span style="color: red;">*</span></label>
+                        <input type="text" id="regBranch" class="form-input" placeholder="Branch">
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="form-label" for="regSemester">Sem:</label>
+                        <select id="regSemester" class="form-input" style="padding: 12px 5px;">
+                            <option value="">-</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="regPhone">Phone Number (Optional):</label>
+                    <input type="tel" id="regPhone" class="form-input" placeholder="+91 0000000000">
+                </div>
+            </div>
+
+            <button id="markAttendanceBtn" class="btn" onclick="markAttendance()" disabled>
+                🎯 Mark My Attendance
+            </button>
+        </div>
+
+        <!-- Location Info -->
+        <div class="location-info">
+            <div id="locationDetails">Location checking in progress...</div>
+            <div id="deviceInfo" class="device-info"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const EVENT_ID = '{{ event.event_id }}';
+        const IS_GEOFENCING_ENABLED = {{ 'true' if (event.geofencing_enabled and event.latitude and event.longitude) else 'false' }};
+        const EVENT_LOCATION = {
+            lat: {{ event.latitude | default(0) }},
+            lng: {{ event.longitude | default(0) }},
+            name: '{{ event.event_location | default("") }}'
+        };
+        const GEOFENCE_RADIUS = {{ (event.geofence_radius or event.attendance_radius) | default(100) }}; // meters
+        console.log('Event Config:', { EVENT_ID, IS_GEOFENCING_ENABLED, EVENT_LOCATION, GEOFENCE_RADIUS });
+
+        // Global error handler for debugging
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('JS Error:', msg, 'at', lineNo, ':', columnNo);
+            // alert('JavaScript Error: ' + msg + '\nLine: ' + lineNo);
+            return false;
+        };
+
+        // IndexedDB Configuration for Persistent Device ID
+        const DB_NAME = 'AttendanceStorage';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'identity';
+
+        function getPersistentId() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME);
+                    }
+                };
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    try {
+                        const transaction = db.transaction(STORE_NAME, 'readonly');
+                        const store = transaction.objectStore(STORE_NAME);
+                        const getReq = store.get('deviceId');
+                        getReq.onsuccess = () => resolve(getReq.result);
+                        getReq.onerror = () => resolve(null);
+                    } catch (err) {
+                        resolve(null);
+                    }
+                };
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        function savePersistentId(id) {
+            return new Promise((resolve) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    try {
+                        const transaction = db.transaction(STORE_NAME, 'readwrite');
+                        const store = transaction.objectStore(STORE_NAME);
+                        store.put(id, 'deviceId');
+                        transaction.oncomplete = () => resolve(true);
+                    } catch (err) {
+                        resolve(false);
+                    }
+                };
+                request.onerror = () => resolve(false);
+            });
+        }
+
+        // Global variables
+        let userLocation = null;
+        let deviceSignature = null;
+        let locationPermissionGranted = false;
+
+
+
+        // Validate browser compatibility (Generic support for all modern browsers)
+        function validateBrowser() {
+            return true;
+        }
+
+        // Initialize on page load
+        window.onload = async function () {
+            console.log('Page loaded, initializing...');
+            // First check browser compatibility
+            if (!validateBrowser()) {
+                console.log('Browser validation failed');
+                return;
+            }
+
+            await generateDeviceSignature();
+            console.log('Device signature generated');
+            checkLocationAndDevice();
+        };
+
+        // Generate unique device signature
+        async function generateDeviceSignature() {
+            try {
+                // Create browser fingerprint
+                const fingerprint = {
+                    screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+                    pixelRatio: window.devicePixelRatio || 1,
+                    userAgent: navigator.userAgent.substring(0, 100),
+                    platform: navigator.platform,
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    hardwareConcurrency: navigator.hardwareConcurrency || 0,
+                    deviceMemory: navigator.deviceMemory || 0,
+                    canvas: getCanvasFingerprint(),
+                    webgl: getWebGLRenderer(),
+                    browserName: getBrowserName(),
+                    browserVersion: navigator.userAgent.match(/(?:Chrome|Firefox|Safari|Edg|OPR)\/([0-9.]+)/)?.[1] || 'unknown',
+                    isDesktop: !(/Mobile|Android|iPhone|iPad/.test(navigator.userAgent)),
+                    vendorInfo: navigator.vendor
+                };
+
+                function getWebGLRenderer() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                        if (!gl) return 'no-webgl';
+                        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                    } catch (e) {
+                        return 'webgl-error';
+                    }
+                }
+
+                function getBrowserName() {
+                    const ua = navigator.userAgent;
+                    if (ua.includes("Edg/")) return "Edge";
+                    if (ua.includes("OPR/") || ua.includes("Opera/")) return "Opera";
+                    if (ua.includes("Chrome/")) return "Chrome";
+                    if (ua.includes("Firefox/")) return "Firefox";
+                    if (ua.includes("Safari/")) return "Safari";
+                    return "Unknown";
+                }
+
+                // Create hash from fingerprint
+                const fingerprintHash = btoa(JSON.stringify(fingerprint)).substring(0, 32);
+
+                // Get or create persistent device ID (Multi-layered store)
+                let deviceId = localStorage.getItem('attendance_device_id');
+                const idbId = await getPersistentId();
+                
+                // Recovery logic: if ID exists in one place but not the other, restore it
+                if (!deviceId && idbId) {
+                    deviceId = idbId;
+                    localStorage.setItem('attendance_device_id', deviceId);
+                } else if (deviceId && !idbId) {
+                    await savePersistentId(deviceId);
+                }
+                
+                // If totally new device, create brand new ID and store in both
+                if (!deviceId) {
+                    deviceId = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('attendance_device_id', deviceId);
+                    await savePersistentId(deviceId);
+                    localStorage.setItem('device_created_at', new Date().toISOString());
+                }
+
+                deviceSignature = {
+                    deviceId: deviceId,
+                    fingerprint: fingerprintHash,
+                    timestamp: Date.now(),
+                    userAgent: navigator.userAgent.substring(0, 50)
+                };
+
+                // Display device info
+                document.getElementById('deviceInfo').innerHTML = `Device ID: ${deviceId.substring(0, 12)}...`;
+
+            } catch (error) {
+                console.error('Error generating device signature:', error);
+                deviceSignature = {
+                    deviceId: 'fallback_' + Date.now(),
+                    fingerprint: 'error',
+                    timestamp: Date.now(),
+                    userAgent: 'unknown'
+                };
+            }
+        }
+
+        // Generate canvas fingerprint
+        function getCanvasFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.fillText('Attendance System 2025', 2, 2);
+                return canvas.toDataURL().substring(0, 50);
+            } catch (error) {
+                return 'canvas_error';
+            }
+        }
+
+        // Check location and device permissions
+        function checkLocationAndDevice() {
+            // If location/geofencing is turned off for this event, do NOT ask for location!
+            if (!IS_GEOFENCING_ENABLED) {
+                console.log('Location requirement is turned OFF for this event. Bypassing GPS check.');
+                showStatus('success', '✨', 'Ready for Attendance', 'Location check is not required for this event.');
+                document.getElementById('attendanceForm').style.display = 'block';
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                showStatus('error', '❌', 'Location Not Supported', 'Your browser does not support geolocation');
+                return;
+            }
+
+            // Check if event has location configured
+            if (!EVENT_LOCATION.lat || !EVENT_LOCATION.lng) {
+                showStatus('error', '⚠️', 'Location Not Configured', 'Event location is not properly configured');
+                return;
+            }
+
+            showStatus('warning', '📍', 'Getting Location...', 'Please allow location access when prompted');
+            console.log('Requesting geolocation...');
+            // Get current location
+            navigator.geolocation.getCurrentPosition(
+                onLocationSuccess,
+                onLocationError,
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Location success callback
+        function onLocationSuccess(position) {
+            userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: Date.now()
+            };
+
+            locationPermissionGranted = true;
+
+            // Calculate distance to event location
+            const distance = calculateDistance(
+                userLocation.lat,
+                userLocation.lng,
+                EVENT_LOCATION.lat,
+                EVENT_LOCATION.lng
+            );
+
+            // Update location display
+            document.getElementById('locationDetails').innerHTML =
+                `Your location: ${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}<br>
+                 Distance to event: ${Math.round(distance)}m (Accuracy: ±${Math.round(userLocation.accuracy)}m)`;
+
+            // Check if within geofence
+            if (distance <= GEOFENCE_RADIUS) {
+                showStatus('success', '✅', 'Location Verified!', `You are within ${Math.round(distance)}m of the event location`);
+                document.getElementById('attendanceForm').style.display = 'block';
+            } else {
+                showStatus('error', '❌', 'Not at Event Location',
+                    `You are ${Math.round(distance)}m away. You must be within ${GEOFENCE_RADIUS}m to mark attendance.`);
+            }
+        }
+
+        // Location error callback
+        function onLocationError(error) {
+            let errorMessage = '';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Location access denied. Please allow location access and refresh the page.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Location information unavailable. Please check your GPS settings.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Location request timed out. Please try again.';
+                    break;
+                default:
+                    errorMessage = 'An unknown error occurred while getting location.';
+            }
+
+            showStatus('error', '❌', 'Location Error', errorMessage);
+        }
+
+        // Calculate distance between two coordinates (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; // Distance in meters
+        }
+
+        // Show status message
+        function showStatus(type, icon, title, message) {
+            const statusCard = document.getElementById('statusCard');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusMessage = document.getElementById('statusMessage');
+
+            statusCard.className = `status-card ${type}`;
+            statusIcon.textContent = icon;
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+        }
+
+        // Global variable to store registration data
+        let registrationData = null;
+        let lookupTimeout = null;
+
+        // Lookup registration by enrollment number
+        async function lookupRegistration() {
+            const enrollmentNo = document.getElementById('enrollmentNo').value.trim();
+            const messageDiv = document.getElementById('enrollmentMessage');
+            const studentInfo = document.getElementById('studentInfo');
+            const onTheFlyReg = document.getElementById('onTheFlyRegistration');
+            const markBtn = document.getElementById('markAttendanceBtn');
+
+            // Clear previous timeout
+            if (lookupTimeout) {
+                clearTimeout(lookupTimeout);
+            }
+
+            if (!enrollmentNo || enrollmentNo.length < 3) {
+                messageDiv.innerHTML = '';
+                studentInfo.style.display = 'none';
+                onTheFlyReg.style.display = 'none';
+                markBtn.disabled = true;
+                registrationData = null;
+                return;
+            }
+
+            // Show searching message
+            messageDiv.innerHTML = '<span style="color: #666;">🔍 Searching...</span>';
+            studentInfo.style.display = 'none';
+            onTheFlyReg.style.display = 'none';
+            markBtn.disabled = true;
+            registrationData = null;
+
+            // Debounce API call
+            lookupTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/event/${EVENT_ID}/registration/${encodeURIComponent(enrollmentNo.toUpperCase())}`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        registrationData = result.registration;
+
+                        // Show success message
+                        messageDiv.innerHTML = '<span style="color: #28a745;">✅ Registration found</span>';
+
+                        // Display student information
+                        document.getElementById('displayName').textContent = registrationData.name;
+                        document.getElementById('displaySchool').textContent = registrationData.school;
+                        document.getElementById('displayBranchSemester').textContent =
+                            `${registrationData.branch} - Semester ${registrationData.semester}`;
+
+                        studentInfo.style.display = 'block';
+                        onTheFlyReg.style.display = 'none';
+
+                        // Enable button for verified registration
+                        markBtn.disabled = false;
+                        markBtn.innerHTML = '🎯 Mark My Attendance';
+                        markBtn.style.background = '#4CAF50';
+                        markBtn.style.color = 'white';
+
+                    } else {
+                        // NO REGISTRATION FOUND - Show on-the-fly registration form
+                        messageDiv.innerHTML = '<span style="color: #f39c12;">ℹ️ Not registered yet? Register below to mark attendance.</span>';
+                        studentInfo.style.display = 'none';
+                        onTheFlyReg.style.display = 'block';
+                        
+                        // Set current enrollment number in a hidden state or just use the input
+                        // Clear registration data to trigger "Register and Mark" logic
+                        registrationData = null;
+                        
+                        // Enable button for new registration
+                        markBtn.disabled = false;
+                        markBtn.innerHTML = '✨ Register & Mark My Attendance';
+                        markBtn.style.background = '#4CAF50';
+                        markBtn.style.color = 'white';
+                        
+                        // Auto-fill student info if they exist in master database but not this event
+                        await lookupMasterStudent(enrollmentNo);
+                    }
+                } catch (error) {
+                    console.error('Error looking up registration:', error);
+                    messageDiv.innerHTML = '<span style="color: #dc3545;">❌ Error looking up registration</span>';
+                    studentInfo.style.display = 'none';
+                    onTheFlyReg.style.display = 'none';
+                    markBtn.disabled = true;
+                    registrationData = null;
+                }
+            }, 500); // 500ms delay for debouncing
+        }
+
+        // New function to lookup student in master database
+        async function lookupMasterStudent(enrollmentNo) {
+            try {
+                const response = await fetch(`/api/student/${encodeURIComponent(enrollmentNo.toUpperCase())}`);
+                const data = await response.json();
+                
+                if (data.success && data.student) {
+                    const student = data.student;
+                    if (student.name) document.getElementById('regName').value = student.name;
+                    if (student.email) document.getElementById('regEmail').value = student.email;
+                    if (student.school) document.getElementById('regSchool').value = student.school;
+                    if (student.branch) document.getElementById('regBranch').value = student.branch;
+                    if (student.semester) document.getElementById('regSemester').value = student.semester;
+                    if (student.phone) document.getElementById('regPhone').value = student.phone;
+                }
+            } catch (error) {
+                console.warn('Error fetching master student data:', error);
+            }
+        }
+
+        // Mark attendance function
+        async function markAttendance() {
+            const enrollmentNo = document.getElementById('enrollmentNo').value.trim().toUpperCase();
+            
+            // Validation - check if registration data is available or on-the-fly registration is filled
+            if (!registrationData) {
+                // Check if on-the-fly registration is visible and filled
+                const onTheFlyReg = document.getElementById('onTheFlyRegistration');
+                if (onTheFlyReg.style.display !== 'none') {
+                    // Validate on-the-fly registration fields
+                    const name = document.getElementById('regName').value.trim();
+                    const email = document.getElementById('regEmail').value.trim();
+                    const school = document.getElementById('regSchool').value.trim();
+                    const branch = document.getElementById('regBranch').value.trim();
+                    const semester = document.getElementById('regSemester').value;
+                    const phone = document.getElementById('regPhone').value.trim();
+                    
+                    if (!name || !email || !school || !branch) {
+                        alert('Please fill in all required fields for registration');
+                        return;
+                    }
+                    
+                    // Create temporary registration data for this session
+                    registrationData = {
+                        name: name,
+                        email: email,
+                        school: school,
+                        branch: branch,
+                        semester: semester,
+                        enrollment_no: enrollmentNo,
+                        whatsapp_number: phone,
+                        attendee_id: 'NEW_' + Date.now(), // Temporary ID, server will handle it
+                        register_on_the_fly: true // Flag for server
+                    };
+                } else {
+                    alert('Please enter a valid enrollment number first');
+                    return;
+                }
+            }
+
+            if (IS_GEOFENCING_ENABLED && !userLocation) {
+                alert('Location not available. Please allow location access to mark attendance.');
+                return;
+            }
+
+            if (!deviceSignature) {
+                alert('Device signature not available. Please refresh the page.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('markAttendanceBtn').disabled = true;
+
+            try {
+                // Prepare attendance data using registration information
+                const attendanceData = {
+                    event_id: EVENT_ID,
+                    student_name: registrationData.name,
+                    student_id: registrationData.attendee_id,
+                    enrollment_no: registrationData.enrollment_no || enrollmentNo,
+                    whatsapp_number: registrationData.whatsapp_number,
+                    email: registrationData.email,
+                    school: registrationData.school,
+                    branch: registrationData.branch,
+                    semester: registrationData.semester,
+                    register_on_the_fly: registrationData.register_on_the_fly || false,
+                    device_signature: deviceSignature,
+                    location: userLocation,
+                    timestamp: new Date().toISOString(),
+                    missed_classes: []
+                };
+
+                // Send to server
+                const response = await fetch('/mark_geofenced_attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(attendanceData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('success', '🎉', 'Attendance Marked!',
+                        `Welcome ${registrationData.name}! Your attendance has been recorded successfully.`);
+
+                    // Hide form and show success
+                    document.getElementById('attendanceForm').style.display = 'none';
+
+                    // Redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '/attendance_success';
+                    }, 3000);
+                } else {
+                    showStatus('error', '❌', 'Attendance Failed', result.message);
+                    document.getElementById('markAttendanceBtn').disabled = false;
+                    document.getElementById('loadingDiv').style.display = 'none';
+                    
+                    // Reset registration data if it was a failed on-the-fly attempt
+                    if (registrationData.register_on_the_fly) {
+                        registrationData = null;
+                        document.getElementById('markAttendanceBtn').innerHTML = '✨ Register & Mark My Attendance';
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error marking attendance:', error);
+                showStatus('error', '❌', 'System Error', 'An unexpected error occurred. Please try again.');
+                document.getElementById('markAttendanceBtn').disabled = false;
+                document.getElementById('loadingDiv').style.display = 'none';
+                
+                if (registrationData && registrationData.register_on_the_fly) {
+                    registrationData = null;
+                }
+            }
+        }
+
+        // Auto-refresh location every 30 seconds (for accuracy, only if geofencing enabled)
+        setInterval(() => {
+            if (IS_GEOFENCING_ENABLED && locationPermissionGranted) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: Date.now()
+                        };
+                    },
+                    () => { }, // Ignore errors on auto-refresh
+                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
+                );
+            }
+        }, 30000);
+    </script>
+</body>
+
+</html>

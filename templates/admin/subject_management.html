@@ -1,0 +1,84 @@
+{% extends "base_authenticated.html" %}
+
+{% block title %}Subject Management - Admin Panel{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Attendance System</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+<div class="container mt-4">
+    <h1>Subject Management</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Import Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Import Subjects</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Import from Excel File</h6>
+                    <form action="{{ url_for('import_subjects') }}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" name="excel_file" accept=".xlsx,.xls" required>
+                            <div class="form-text">Upload Excel file with subject data</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" name="clear_existing" id="clear_existing">
+                            <label class="form-check-label" for="clear_existing">
+                                Clear existing subjects before import
+                            </label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Import Excel
+                            </button>
+                            <a href="{{ url_for('download_subject_template') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-download"></i> Download Template
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Format Requirements -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Import Format Requirements:</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <h6 class="text-info">Required Columns (case-sensitive):</h6>
+                    <ul class="mb-0">
+                        <li><strong>Subject Code</strong> - Must be unique identifier (e.g., CS101, MATH201)</li>
+                        <li><strong>Subject Name</strong> - Full name of the subject</li>
+                        <li><strong>Sections</strong> - Comma-separated sections (e.g., A,B,C) (optional)</li>
+                        <li><strong>Assigned Teachers</strong> - Comma-separated teacher usernames (optional)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

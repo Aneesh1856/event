@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Event - {{ event.event_name }}</title>
+    {% set logo_cache_bust = '1.0' %}
+    <link rel="preload" href="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}"
+        as="image">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-navy: #002D62;
+            --accent-yellow: #FFC300;
+            --card-bg: #ffffff;
+            --text-dark: #333;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            background: #e0e0e0;
+            min-height: 100vh;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+        }
+
+        .content-container {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .page-header {
+            background: var(--primary-navy);
+            color: white;
+            padding: 2rem;
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0 1rem;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 0;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            margin: 0 0.5rem;
+            position: relative;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: transparent;
+            border-bottom: 3px solid var(--primary-navy);
+            color: var(--primary-navy);
+        }
+
+        .tab-content {
+            padding: 2rem;
+        }
+
+        .stat-card {
+            background: var(--primary-navy);
+            color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .attendee-card {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 0.8rem;
+            transition: all 0.2s ease;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .attendee-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-color: #dee2e6;
+        }
+
+        /* Simplified Attendee Cards - Clean Layout */
+        .attendee-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+
+        .attendee-details {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            flex: 1;
+        }
+
+        .attendee-avatar {
+            width: 42px;
+            height: 42px;
+            background: var(--primary-navy);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .attendee-text {
+            flex: 1;
+        }
+
+        .attendee-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .attendee-meta {
+            display: flex;
+            gap: 1.2rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .meta-item i {
+            font-size: 0.8rem;
+            color: #8e9297;
+        }
+
+        .attendee-timestamp {
+            background-color: #f8f9fa;
+            color: #495057;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-registered {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .action-btn {
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.9rem;
+            margin: 0.2rem;
+        }
+
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid #dee2e6;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .search-box:focus {
+            border-color: var(--primary-navy);
+            box-shadow: 0 0 0 0.2rem rgba(0, 45, 98, 0.25);
+        }
+
+        .btn-primary {
+            background: var(--primary-navy) !important;
+            border: none !important;
+            border-radius: 8px;
+            font-weight: 600;
+            color: white !important;
+        }
+
+        .btn-primary:hover {
+            background: #001e47 !important;
+            color: white !important;
+        }
+
+        .btn-outline-primary {
+            border: 1px solid var(--primary-navy) !important;
+            color: var(--primary-navy) !important;
+            background: transparent !important;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-navy) !important;
+            color: white !important;
+            border-color: var(--primary-navy) !important;
+        }
+
+        .export-btn {
+            background: var(--accent-yellow);
+            border: none;
+            color: var(--primary-navy);
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .export-btn:hover {
+            background: #e6af00;
+            color: var(--primary-navy);
+        }
+
+        .qr-quick-access {
+            background: #f8f9fa;
+            border: 2px dashed var(--primary-navy);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .qr-access-title {
+            color: var(--primary-navy);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .qr-access-subtitle {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .qr-display-btn {
+            background: var(--primary-navy);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .qr-display-btn:hover {
+            background: #001e47;
+            color: white;
+            text-decoration: none;
+        }
+
+        .attendance-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -1.7rem;
+            top: 1.2rem;
+            width: 2px;
+            height: calc(100% - 0.7rem);
+            background: #dee2e6;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        /* Event Header Section */
+        .event-header {
+            background: var(--primary-navy);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 0;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .amity-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .nav-divider {
+            width: 2px;
+            height: 30px;
+            background: var(--accent-yellow);
+            border-radius: 2px;
+        }
+
+
+
+        .qr-header-btn {
+            background: white;
+            color: var(--primary-navy);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .qr-header-btn:hover {
+            background: #f8f9fa;
+            color: var(--primary-navy);
+            text-decoration: none;
+        }
+
+        .btn-outline-light {
+            border-color: rgba(255, 255, 255, 0.5) !important;
+            color: white !important;
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: white !important;
+            color: white !important;
+        }
+
+        .btn-warning {
+            background: var(--accent-yellow) !important;
+            border: none !important;
+            color: var(--primary-navy) !important;
+            font-weight: 600;
+        }
+
+        .btn-warning:hover {
+            background: #e6af00 !important;
+            color: var(--primary-navy) !important;
+        }
+
+        /* Additional page elements styling */
+        .page-header h2 {
+            color: white !important;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .btn-lg {
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Event Header -->
+    <div class="event-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ url_for('static', filename='amity-university-logo.png') }}?_={{ logo_cache_bust }}"
+                            alt="Amity University" class="amity-logo me-3" style="height: 40px; max-width: none;">
+                        <div class="nav-divider me-3"></div>
+                        <h1 class="header-title mb-0">MANAGE EVENT</h1>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center justify-content-end gap-3">
+                        <div class="d-flex align-items-center gap-2 text-white">
+                            <i class="fas fa-user"></i>
+                            <span>{{ organizer_info.organizer_name or 'ORGANIZER' }}</span>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="btn btn-warning">
+                            <i class="fas fa-sign-out-alt"></i> LOGOUT
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="container mt-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('organizer_dashboard') }}" class="text-decoration-none">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">
+                    Manage Event
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="container-fluid">
+
+        <div class="container mt-4">
+            <div class="content-container">
+                <!-- Header -->
+                <div class="page-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2><i class="fas fa-calendar-alt"></i> {{ event.event_name }}</h2>
+                            <p class="mb-0">
+                                <i class="fas fa-map-marker-alt"></i> {{ event.event_location }} |
+                                <i class="fas fa-calendar"></i> {{ event.event_date }} |
+                                <i class="fas fa-clock"></i> {{ event.event_time }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                <a href="{{ url_for('event_qr_display', event_id=event.event_id) }}"
+                                    class="btn btn-warning btn-lg" target="_blank">
+                                    <i class="fas fa-qrcode"></i> Show QR Code
+                                </a>
+                                <a href="{{ url_for('event_attendance_stats', event_id=event.event_id) }}"
+                                    class="btn btn-primary btn-lg" target="_blank">
+                                    <i class="fas fa-chart-line"></i> View Statistics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="tab-content">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <span class="stat-number" id="total-registered">{{ attendees|length }}</span>
+                                <small>Total Registered</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <span class="stat-number" id="present-today">{{ attendance_records|length }}</span>
+                                <small>Present Today</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <span class="stat-number" id="attendance-rate">
+                                    {% if attendees|length > 0 %}
+                                    {{ "%.1f"|format((attendance_records|length / attendees|length) * 100) }}%
+                                    {% else %}
+                                    0%
+                                    {% endif %}
+                                </span>
+                                <small>Attendance Rate</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <span class="stat-number" {% if event.capacity and (event.capacity - attendees|length)
+                                    <=0 %}style="color: #dc3545;" {% elif event.capacity and (event.capacity -
+                                    attendees|length) <=5 %}style="color: #fd7e14;" {% endif %}>
+                                    {% if event.capacity %}
+                                    {% set spots_left = event.capacity - attendees|length %}
+                                    {% if spots_left <= 0 %} 0 (FULL) {% else %} {{ spots_left }} {% endif %} {% else %}
+                                        Unlimited {% endif %} </span>
+                                        <small>Spots Available</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capacity Alerts -->
+                {% if event.capacity %}
+                {% set spots_left = event.capacity - attendees|length %}
+                {% if spots_left <= 0 %} <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Event Full!</strong> All {{ event.capacity }} registration slots are filled. New
+                    registration attempts will be rejected.
+            </div>
+            {% elif spots_left <= 5 %} <div class="alert alert-warning">
+                <i class="fas fa-info-circle"></i>
+                <strong>Nearly Full!</strong> Only {{ spots_left }} registration slot{{ 's' if spots_left > 1 else '' }}
+                remaining out of {{ event.capacity }}.
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="manageTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="event-details-tab" data-bs-toggle="tab"
+                    data-bs-target="#event-details" type="button">
+                    <i class="fas fa-edit"></i> Event Details
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="attendees-tab" data-bs-toggle="tab" data-bs-target="#attendees"
+                    type="button">
+                    <i class="fas fa-users"></i> Attendees
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance"
+                    type="button">
+                    <i class="fas fa-check-circle"></i> Attendance Log
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings"
+                    type="button">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="manageTabContent">
+            <!-- Event Details Tab -->
+            <div class="tab-pane fade show active" id="event-details" role="tabpanel">
+                <div class="p-4">
+                    <h4><i class="fas fa-edit text-primary me-2"></i>Edit Event Details</h4>
+                    <p class="text-muted mb-4">Update event information, location settings, and attendance preferences.
+                    </p>
+
+                    <form id="eventEditForm">
+                        <!-- Basic Event Information -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Event Name *</label>
+                                <input type="text" class="form-control" id="eventName" value="{{ event.event_name }}"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Event Description</label>
+                                <textarea class="form-control" rows="3" id="eventDescription"
+                                    placeholder="Describe your event (optional)">{{ event.event_description or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Event Date *</label>
+                                <input type="date" class="form-control" id="eventDate" value="{{ event.event_date }}"
+                                    required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Event Time *</label>
+                                <input type="time" class="form-control" id="eventTime" value="{{ event.event_time }}"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Event Location *</label>
+                                <input type="text" class="form-control" id="eventLocation"
+                                    value="{{ event.event_location }}"
+                                    placeholder="Enter event location (e.g., Main Auditorium, Online, etc.)" required>
+                            </div>
+                        </div>
+
+                        <!-- Attendance Limits -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-users text-success me-2"></i>Attendance Limits</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Maximum Attendees</label>
+                                        <input type="number" class="form-control" id="maxAttendees"
+                                            value="{{ event.capacity or '' }}" min="1"
+                                            placeholder="Leave blank for unlimited">
+                                        <div class="form-text">Set a limit on the number of attendees (optional)</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Registration Status</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="allowNewRegistrations"
+                                                {% if event.registration_open %}checked{% endif %}>
+                                            <label class="form-check-label" for="allowNewRegistrations">
+                                                Allow new registrations
+                                            </label>
+                                            <div class="form-text">Uncheck to stop accepting new registrations</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                                <i class="fas fa-undo me-1"></i>Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attendees Tab -->
+            <div class="tab-pane fade" id="attendees" role="tabpanel">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control search-box" placeholder="Search attendees..."
+                            id="attendee-search">
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn export-btn" onclick="exportAttendance()" style="margin-right: 10px;">
+                            <i class="fas fa-download"></i> Export Event Attendance
+                        </button>
+                        <button class="btn export-btn" onclick="exportAttendees()" style="margin-right: 10px;">
+                            <i class="fas fa-users"></i> Export Attendees List
+                        </button>
+                    </div>
+                </div>
+
+                <div id="attendee-list">
+                    {% for attendee in attendees %}
+                    <div class="attendee-card" data-name="{{ attendee.name|lower }}"
+                        data-email="{{ attendee.email|lower }}">
+                        <div class="row align-items-center">
+                            <div class="col-md-4">
+                                <h6 class="mb-1">{{ attendee.name }}</h6>
+                                <small class="text-muted">{{ attendee.email }}</small>
+                            </div>
+                            <div class="col-md-2">
+                                {% if attendee.whatsapp_number %}
+                                <small class="text-muted">{{ attendee.whatsapp_number }}</small>
+                                {% else %}
+                                <small class="text-muted">No phone provided</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Registered: {{ attendee.registration_date }}</small>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                {% set attended = namespace(value=false) %}
+                                {% for record in attendance_records %}
+                                {% if (record.enrollment_no == attendee.enrollment_no) or
+                                (record.attendee_name == attendee.name and record.attendee_phone ==
+                                attendee.whatsapp_number) %}
+                                {% set attended.value = true %}
+                                {% endif %}
+                                {% endfor %}
+
+                                {% if attended.value %}
+                                <span class="status-badge status-present">
+                                    <i class="fas fa-check"></i> Present
+                                </span>
+                                {% else %}
+                                <span class="status-badge status-absent">
+                                    <i class="fas fa-times"></i> Absent
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No registrations yet</h5>
+                        <p class="text-muted">Share the registration link to get attendees!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Attendance Log Tab -->
+            <div class="tab-pane fade" id="attendance" role="tabpanel">
+                <!-- Attendance Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">{{ attendance_records|length }}</h5>
+                                <p class="card-text">Total Attendance</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-info">{{ attendees|length }}</h5>
+                                <p class="card-text">Total Registered</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning">
+                                    {{ attendees|length - attendance_records|length }}
+                                </h5>
+                                <p class="card-text">Absent</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <a href="{{ url_for('event_attendance_stats', event_id=event.event_id) }}"
+                                        class="btn btn-primary btn-sm" target="_blank">
+                                        <i class="fas fa-chart-line"></i> Advanced Stats
+                                    </a>
+                                </div>
+                                <p class="card-text">Detailed Analytics</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Information -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Export Information</h6>
+                    <p class="mb-0"><strong>Today's Attendance Export</strong> includes: Name, Enrollment Number,
+                        School, Program, Semester, Date, Time, Location, Device Info</p>
+                </div>
+
+                <!-- Search Bar for Attendance Records -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="position-relative">
+                            <i class="fas fa-search position-absolute"
+                                style="left: 1rem; top: 50%; transform: translateY(-50%); color: #6c757d; z-index: 5;"></i>
+                            <input type="text" id="attendanceSearch" class="form-control search-box ps-5"
+                                placeholder="Search attendees by name, enrollment, phone, or school...">
+                        </div>
+                        <div id="attendanceSearchResults" class="mt-2" style="font-size: 0.9rem; color: #6c757d;"></div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="clearAttendanceSearch()">
+                            <i class="fas fa-times me-1"></i>Clear Search
+                        </button>
+                    </div>
+                </div>
+
+                <div class="attendance-timeline" id="attendance-log">
+                    {% for record in attendance_records %}
+                    <div class="timeline-item">
+                        <div class="attendee-card">
+                            <div class="attendee-info">
+                                <div class="attendee-details">
+                                    <div class="attendee-avatar">
+                                        {{ (record.attendee_name or record.name or 'U')[0]|upper }}
+                                    </div>
+                                    <div class="attendee-text">
+                                        <div class="attendee-name">{{ record.attendee_name or record.name or 'Unknown'
+                                            }}</div>
+                                        <div class="attendee-meta">
+                                            <div class="meta-item">
+                                                <i class="fas fa-id-card"></i>
+                                                <span>{{ record.enrollment_no or 'N/A' }}</span>
+                                            </div>
+                                            <div class="meta-item">
+                                                <i class="fas fa-phone"></i>
+                                                <span>{{ record.whatsapp_number or record.attendee_phone or 'N/A'
+                                                    }}</span>
+                                            </div>
+                                            <div class="meta-item">
+                                                <i class="fas fa-university"></i>
+                                                <span>{{ record.school or 'N/A' }} - {{ record.branch or 'N/A' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="attendee-timestamp">
+                                    <i class="fas fa-check me-1"></i>
+                                    {% if record.marked_at %}
+                                    {{ record.marked_at[:19] | replace('T', ' ') }}
+                                    {% elif record.timestamp %}
+                                    {{ record.timestamp }}
+                                    {% else %}
+                                    Present
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h5>No attendance records</h5>
+                        <p class="text-muted">Attendance will appear here as attendees scan the QR code.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane fade" id="settings" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="qr-quick-access">
+                            <h5><i class="fas fa-qrcode"></i> QR Code Access</h5>
+                            <p class="text-muted">Display the attendance QR code for this event</p>
+                            <a href="{{ url_for('event_qr_display', event_id=event.event_id) }}" class="btn btn-primary"
+                                target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Open QR Display
+                            </a>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-share-alt"></i> Event Links</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Registration Link:</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control"
+                                            value="{{ request.url_root }}register/{{ event.event_id }}"
+                                            id="registration-link" readonly>
+                                        <button class="btn btn-outline-secondary"
+                                            onclick="copyLink('registration-link')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Geofencing Settings Card -->
+                        <div class="card mt-3">
+                            <div class="card-header bg-primary text-white">
+                                <h6><i class="fas fa-map-marker-alt"></i> Geofencing Location</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="geofencing-form">
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Location:</label>
+                                        <div class="alert alert-info">
+                                            <strong>📍 {{ event.event_location or 'No location set' }}</strong><br>
+                                            {% if event.latitude and event.longitude %}
+                                            Coordinates: {{ "%.6f"|format(event.latitude) }}, {{
+                                            "%.6f"|format(event.longitude) }}<br>
+                                            Radius: {{ event.geofence_radius or event.attendance_radius or 100 }} meters
+                                            {% else %}
+                                            <em>No geofencing coordinates set</em>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="form-check form-switch mb-3 p-3 bg-light rounded border">
+                                        <input class="form-check-input ms-0 me-2" type="checkbox" id="enable_geofencing_switch"
+                                            name="enable_geofencing" style="cursor: pointer; transform: scale(1.3);"
+                                            {{ 'checked' if event.geofencing_enabled else '' }}>
+                                        <label class="form-check-label fw-bold" for="enable_geofencing_switch" style="cursor: pointer;">
+                                            Require Physical Location for Attendance
+                                        </label>
+                                        <div class="form-text text-muted">
+                                            When turned <strong>OFF</strong>, attendees can mark attendance from anywhere without being asked for GPS/location permission.
+                                        </div>
+                                    </div>
+
+                                    <div id="geofencing_coords_container" style="{{ '' if event.geofencing_enabled else 'display: none;' }}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Location Name:</label>
+                                        <input type="text" class="form-control" name="event_location"
+                                            value="{{ event.event_location or '' }}"
+                                            placeholder="Enter event location name">
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Latitude:</label>
+                                            <input type="number" class="form-control" name="latitude"
+                                                value="{{ event.latitude or '' }}" step="0.000001"
+                                                placeholder="e.g., 18.5204">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Longitude:</label>
+                                            <input type="number" class="form-control" name="longitude"
+                                                value="{{ event.longitude or '' }}" step="0.000001"
+                                                placeholder="e.g., 73.8567">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 mt-3">
+                                        <label class="form-label">Geofence Radius (meters):</label>
+                                        <input type="number" class="form-control" name="geofence_radius"
+                                            value="{{ event.geofence_radius or event.attendance_radius or 100 }}"
+                                            min="10" max="1000" placeholder="100">
+                                        <small class="form-text text-muted">
+                                            Range: 10-1000 meters. Recommended: 50-200 meters.
+                                        </small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <button type="button" class="btn btn-outline-primary"
+                                            onclick="getCurrentLocation()">
+                                            <i class="fas fa-crosshairs"></i> Use Current Location
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info" onclick="openMapSelector()"
+                                            style="margin-left: 10px;">
+                                            <i class="fas fa-map"></i> Select on Map
+                                        </button>
+                                    </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i> Save Geofencing Settings
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-cog"></i> Event Settings</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="event-settings-form">
+                                    <div class="mb-3">
+                                        <label class="form-label">Event Status:</label>
+                                        <select class="form-select" name="status">
+                                            <option value="active" {{ 'selected' if event.status=='active' }}>Active
+                                            </option>
+                                            <option value="inactive" {{ 'selected' if event.status=='inactive' }}>
+                                                Inactive</option>
+                                            <option value="cancelled" {{ 'selected' if event.status=='cancelled' }}>
+                                                Cancelled</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Registration Status:</label>
+                                        <select class="form-select" name="registration_status">
+                                            <option value="open" {{ 'selected' if event.registration_status=='open' }}>
+                                                Open</option>
+                                            <option value="closed" {{ 'selected' if event.registration_status=='closed'
+                                                }}>Closed</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Missing Classes Management Card -->
+                        <div class="card mt-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h6><i class="fas fa-clock"></i> Missing Classes Management</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Configure time slots when students might miss classes during the
+                                    event.</p>
+
+                                <!-- Display existing slots -->
+                                <div id="existing-slots" class="mb-3">
+                                    <h6>Current Time Slots:</h6>
+                                    <div id="slots-list">
+                                        <!-- Slots will be loaded here -->
+                                        <div class="alert alert-info" id="no-slots-message">
+                                            No time slots configured yet. Add slots below.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add new slot form -->
+                                <form id="add-slot-form">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Class Type:</label>
+                                            <select class="form-select" name="class_type" required>
+                                                <option value="">Select Type</option>
+                                                <option value="theory">Theory Class</option>
+                                                <option value="lab">Lab Session</option>
+                                                <option value="tutorial">Tutorial</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Start Time:</label>
+                                            <input type="time" class="form-control" name="start_time" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">End Time:</label>
+                                            <input type="time" class="form-control" name="end_time" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="submit" class="btn btn-primary d-block">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <!-- Quick Add Predefined Slots -->
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-info"
+                                        onclick="togglePredefinedSlots()">
+                                        <i class="fas fa-clock"></i> Quick Add from Timetable
+                                    </button>
+                                </div>
+
+                                <div id="predefined-slots-container" class="mt-3" style="display: none;">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="fas fa-calendar-alt"></i> College Timetable Slots
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Theory Classes -->
+                                            <h6 class="text-primary"><i class="fas fa-book"></i> Theory Classes</h6>
+                                            <div class="row mb-3">
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '09:00', '09:50', '1st Period')">
+                                                        1st Period<br><small>09:00 - 09:50</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '09:55', '10:45', '2nd Period')">
+                                                        2nd Period<br><small>09:55 - 10:45</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '10:50', '11:40', '3rd Period')">
+                                                        3rd Period<br><small>10:50 - 11:40</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '11:45', '12:35', '4th Period')">
+                                                        4th Period<br><small>11:45 - 12:35</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '13:15', '14:05', '5th Period')">
+                                                        5th Period<br><small>01:15 - 02:05</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '14:10', '15:00', '6th Period')">
+                                                        6th Period<br><small>02:10 - 03:00</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '15:05', '15:55', '7th Period')">
+                                                        7th Period<br><small>03:05 - 03:55</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <button class="btn btn-outline-primary btn-sm w-100"
+                                                        onclick="showSubjectSlotModal('Theory', '16:00', '16:50', '8th Period')">
+                                                        8th Period<br><small>04:00 - 04:50</small>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Lab Sessions -->
+                                            <h6 class="text-success"><i class="fas fa-flask"></i> Lab Sessions</h6>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <button class="btn btn-outline-success btn-sm w-100"
+                                                        onclick="showLabSlotModal('Lab', '09:00', '10:40', 'Morning Lab')">
+                                                        Morning Lab<br><small>09:00 - 10:40 AM</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <button class="btn btn-outline-success btn-sm w-100"
+                                                        onclick="showLabSlotModal('Lab', '10:50', '12:30', 'Pre-Lunch Lab')">
+                                                        Pre-Lunch Lab<br><small>10:50 AM - 12:30 PM</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <button class="btn btn-outline-success btn-sm w-100"
+                                                        onclick="showLabSlotModal('Lab', '13:15', '14:55', 'Afternoon Lab')">
+                                                        Afternoon Lab<br><small>01:15 - 02:55 PM</small>
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <button class="btn btn-outline-success btn-sm w-100"
+                                                        onclick="showLabSlotModal('Lab', '15:05', '16:45', 'Evening Lab')">
+                                                        Evening Lab<br><small>03:05 - 04:45 PM</small>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success" onclick="saveTimeSlots()">
+                                        <i class="fas fa-save"></i> Save All Slots
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subject Slot Selection Modal -->
+                        <div class="modal fade" id="subjectSlotModal" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Select Subject Slot</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Select which subject slot this time period corresponds to:</p>
+                                        <div class="row">
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('A1')">
+                                                    A1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('B1')">
+                                                    B1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('C1')">
+                                                    C1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('D1')">
+                                                    D1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('E1')">
+                                                    E1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('F1')">
+                                                    F1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('G1')">
+                                                    G1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-info w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('TA1')">
+                                                    TA1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-info w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('TB1')">
+                                                    TB1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('A2')">
+                                                    A2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('B2')">
+                                                    B2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('C2')">
+                                                    C2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('D2')">
+                                                    D2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('E2')">
+                                                    E2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('F2')">
+                                                    F2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-primary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('G2')">
+                                                    G2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-info w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('TA2')">
+                                                    TA2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-info w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('TB2')">
+                                                    TB2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-secondary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('TC1')">
+                                                    TC1
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3 mb-2">
+                                                <button class="btn btn-outline-secondary w-100 subject-slot-btn"
+                                                    onclick="selectSubjectSlot('TC2')">
+                                                    TC2
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lab Slot Selection Modal -->
+                        <div class="modal fade" id="labSlotModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Select Lab Slot</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Select which lab slot combination this time period corresponds to:</p>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L1+L2')">
+                                                    L1 + L2
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L3+L4')">
+                                                    L3 + L4
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L5+L6')">
+                                                    L5 + L6
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L7+L8')">
+                                                    L7 + L8
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L9+L10')">
+                                                    L9 + L10
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L11+L12')">
+                                                    L11 + L12
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L13+L14')">
+                                                    L13 + L14
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L15+L16')">
+                                                    L15 + L16
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L17+L18')">
+                                                    L17 + L18
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L19+L20')">
+                                                    L19 + L20
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L21+L22')">
+                                                    L21 + L22
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L23+L24')">
+                                                    L23 + L24
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L25+L26')">
+                                                    L25 + L26
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L27+L28')">
+                                                    L27 + L28
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L29+L30')">
+                                                    L29 + L30
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L31+L32')">
+                                                    L31 + L32
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L33+L34')">
+                                                    L33 + L34
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L35+L36')">
+                                                    L35 + L36
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L37+L38')">
+                                                    L37 + L38
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <button class="btn btn-outline-success w-100 lab-slot-btn"
+                                                    onclick="selectLabSlot('L39+L40')">
+                                                    L39 + L40
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header bg-danger text-white">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Danger Zone</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Permanently delete this event and all associated data.</p>
+                                <button class="btn btn-danger" onclick="deleteEvent()">
+                                    <i class="fas fa-trash"></i> Delete Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Map Selection Modal -->
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">
+                        <i class="fas fa-map-marker-alt"></i> Select Event Location
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Click on the map to set the event location for geofencing.
+                    </div>
+                    <div id="map" style="height: 400px; width: 100%;"></div>
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Selected Latitude:</label>
+                                <input type="text" class="form-control" id="modal-lat" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Selected Longitude:</label>
+                                <input type="text" class="form-control" id="modal-lng" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Accuracy:</label>
+                                <input type="text" class="form-control" id="modal-accuracy" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmMapSelection()">
+                        <i class="fas fa-check"></i> Use This Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Leaflet for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search functionality
+        document.getElementById('attendee-search').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const attendeeCards = document.querySelectorAll('.attendee-card');
+
+            attendeeCards.forEach(card => {
+                const name = card.dataset.name;
+                const email = card.dataset.email;
+
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Attendance search functionality
+        const attendanceSearchInput = document.getElementById('attendanceSearch');
+        const attendanceSearchResults = document.getElementById('attendanceSearchResults');
+        const attendanceLog = document.getElementById('attendance-log');
+
+        if (attendanceSearchInput && attendanceLog) {
+            const attendanceCards = Array.from(attendanceLog.querySelectorAll('.timeline-item'));
+
+            function updateAttendanceSearchResults(visibleCount, totalCount) {
+                if (attendanceSearchInput.value.trim() === '') {
+                    attendanceSearchResults.textContent = `Showing all ${totalCount} attendees`;
+                } else {
+                    attendanceSearchResults.textContent = `Found ${visibleCount} of ${totalCount} attendees`;
+                }
+            }
+
+            function filterAttendanceRecords(searchTerm = '') {
+                let visibleCount = 0;
+                const totalCount = attendanceCards.length;
+
+                attendanceCards.forEach(card => {
+                    const nameElement = card.querySelector('.attendee-name');
+                    const metaElements = card.querySelectorAll('.meta-item span');
+
+                    let textContent = '';
+                    if (nameElement) textContent += nameElement.textContent.toLowerCase() + ' ';
+
+                    metaElements.forEach(element => {
+                        textContent += element.textContent.toLowerCase() + ' ';
+                    });
+
+                    const matchesSearch = searchTerm === '' || textContent.includes(searchTerm);
+
+                    if (matchesSearch) {
+                        card.style.display = '';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                updateAttendanceSearchResults(visibleCount, totalCount);
+            }
+
+            // Search input event
+            attendanceSearchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase().trim();
+                filterAttendanceRecords(searchTerm);
+            });
+
+            // Clear search function
+            window.clearAttendanceSearch = function () {
+                attendanceSearchInput.value = '';
+                filterAttendanceRecords();
+                attendanceSearchInput.focus();
+            };
+
+            // Initialize
+            updateAttendanceSearchResults(attendanceCards.length, attendanceCards.length);
+        }
+
+        // Copy link functionality
+        function copyLink(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+
+            // Show feedback
+            const button = element.nextElementSibling;
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+            }, 2000);
+        }
+
+        // Export functions
+        function exportAttendees() {
+            const btn = document.querySelector('button[onclick="exportAttendees()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            btn.disabled = true;
+
+            window.open(`/export/attendees/{{ event.event_id }}`, '_blank');
+
+            // Restore button after delay
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        function exportAttendance() {
+            const btn = document.querySelector('button[onclick="exportAttendance()"]');
+            if (!btn) {
+                console.error('Export button not found');
+                return;
+            }
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            btn.disabled = true;
+
+            // Export all attendance records
+            const url = `/export/attendance/{{ event.event_id }}`;
+
+            window.open(url, '_blank');
+
+            // Restore button after delay
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        function exportAllAttendance() {
+            const btn = document.querySelector('button[onclick="exportAllAttendance()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            btn.disabled = true;
+
+            window.open(`/export/attendance/{{ event.event_id }}`, '_blank');
+
+            // Restore button after delay
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        // Load attendance by date
+        function loadAttendanceByDate() {
+            const dateInput = document.getElementById('attendance-date');
+            if (!dateInput) {
+                console.error('Date input not found');
+                return;
+            }
+            const date = dateInput.value;
+            window.location.href = `{{ url_for('manage_event', event_id=event.event_id) }}?date=${date}`;
+        }
+
+        // Delete event
+        function deleteEvent() {
+            if (confirm('⚠️ Are you sure you want to delete this event?\n\nThis action cannot be undone!')) {
+                if (confirm('🗑️ This will permanently delete:\n\n• All attendee registrations\n• All attendance records\n• All device usage data\n• QR codes and links\n\nType "DELETE" to confirm you understand this is irreversible.')) {
+
+                    // Show loading state
+                    const deleteBtn = document.querySelector('button[onclick="deleteEvent()"]');
+                    const originalText = deleteBtn.innerHTML;
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                    deleteBtn.disabled = true;
+
+                    fetch(`/api/events/{{ event.event_id }}`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Show success and redirect
+                                alert('✅ Event deleted successfully!');
+                                window.location.href = '{{ url_for("organizer_dashboard") }}';
+                            } else {
+                                throw new Error(data.message || 'Failed to delete event');
+                            }
+                        })
+                        .catch(error => {
+                            // Restore button and show error
+                            deleteBtn.innerHTML = originalText;
+                            deleteBtn.disabled = false;
+
+                            alert(`❌ Error: ${error.message}`);
+                            console.error('Delete event error:', error);
+                        });
+                }
+            }
+        }
+
+        // Auto-refresh attendance stats every 30 seconds
+        setInterval(function () {
+            fetch(`/api/attendance/stats/{{ event.event_id }}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('present-today').textContent = data.present_count;
+                        document.getElementById('attendance-rate').textContent = data.attendance_rate + '%';
+                    }
+                })
+                .catch(error => console.log('Could not refresh stats:', error));
+        }, 30000);
+
+        // Event settings form
+        document.getElementById('event-settings-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitBtn.disabled = true;
+
+            fetch(`/api/events/{{ event.event_id }}/settings`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                        alertDiv.innerHTML = `
+                        <strong>Success!</strong> ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+                        const form = document.getElementById('event-settings-form');
+                        form.parentNode.insertBefore(alertDiv, form);
+
+                        // Auto-dismiss after 3 seconds
+                        setTimeout(() => {
+                            if (alertDiv) alertDiv.remove();
+                        }, 3000);
+                    } else {
+                        throw new Error(data.message || 'Failed to update settings');
+                    }
+                })
+                .catch(error => {
+                    // Show error message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                    <strong>Error!</strong> ${error.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                    const form = document.getElementById('event-settings-form');
+                    form.parentNode.insertBefore(alertDiv, form);
+
+                    console.error('Settings update error:', error);
+                })
+                .finally(() => {
+                    // Restore button state
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+        });
+
+        // Set current date for attendance date picker
+        document.addEventListener('DOMContentLoaded', function () {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('attendance-date');
+            if (dateInput) {
+                dateInput.value = today;
+            }
+        });
+
+        // Geofencing form functionality
+        let map, marker, selectedLat, selectedLng;
+
+        // Get current location
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                const btn = document.querySelector('button[onclick="getCurrentLocation()"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting Location...';
+                btn.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        // Update form fields
+                        document.querySelector('input[name="latitude"]').value = lat.toFixed(6);
+                        document.querySelector('input[name="longitude"]').value = lng.toFixed(6);
+
+                        // Show success message
+                        showAlert('success', 'Location updated successfully!');
+
+                        // Restore button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    },
+                    function (error) {
+                        let message = 'Unable to get location: ';
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                message += 'Location access denied by user.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                message += 'Location information unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                message += 'Location request timed out.';
+                                break;
+                            default:
+                                message += 'Unknown error occurred.';
+                        }
+                        showAlert('danger', message);
+
+                        // Restore button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                );
+            } else {
+                showAlert('danger', 'Geolocation is not supported by this browser.');
+            }
+        }
+
+        // Open map selector
+        // Open map selector
+        function openMapSelector() {
+            const modal = new bootstrap.Modal(document.getElementById('mapModal'));
+            modal.show();
+
+            // Initialize map when modal is shown
+            setTimeout(() => {
+                if (!map) {
+                    // Default to current event location or center of India
+                    const currentLat = {{ event.latitude|default(20.5937, true)|tojson }};
+                    const currentLng = {{ event.longitude|default(78.9629, true)|tojson }};
+
+                    map = L.map('map').setView([currentLat, currentLng], 13);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    // Add existing marker if coordinates exist
+                    {% if event.latitude and event.longitude %}
+                    marker = L.marker([currentLat, currentLng]).addTo(map);
+                    selectedLat = currentLat;
+                    selectedLng = currentLng;
+                    document.getElementById('modal-lat').value = currentLat.toFixed(6);
+                    document.getElementById('modal-lng').value = currentLng.toFixed(6);
+                    {% endif %}
+
+                    // Click event to set marker
+                    map.on('click', function (e) {
+                        if (marker) {
+                            map.removeLayer(marker);
+                        }
+
+                        selectedLat = e.latlng.lat;
+                        selectedLng = e.latlng.lng;
+
+                        marker = L.marker([selectedLat, selectedLng]).addTo(map);
+
+                        document.getElementById('modal-lat').value = selectedLat.toFixed(6);
+                        document.getElementById('modal-lng').value = selectedLng.toFixed(6);
+                        document.getElementById('modal-accuracy').value = 'Manual Selection';
+                    });
+                } else {
+                    // Refresh map size
+                    setTimeout(() => map.invalidateSize(), 100);
+                }
+            }, 300);
+        }
+
+        // Confirm map selection
+        function confirmMapSelection() {
+            if (selectedLat && selectedLng) {
+                document.querySelector('input[name="latitude"]').value = selectedLat.toFixed(6);
+                document.querySelector('input[name="longitude"]').value = selectedLng.toFixed(6);
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('mapModal'));
+                modal.hide();
+
+                showAlert('success', 'Location selected from map successfully!');
+            } else {
+                showAlert('warning', 'Please click on the map to select a location first.');
+            }
+        }
+
+        // Toggle geofencing coordinates container visibility
+        const geofencingSwitch = document.getElementById('enable_geofencing_switch');
+        if (geofencingSwitch) {
+            geofencingSwitch.addEventListener('change', function () {
+                const container = document.getElementById('geofencing_coords_container');
+                if (container) {
+                    container.style.display = this.checked ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Geofencing form submission
+        document.getElementById('geofencing-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            submitBtn.disabled = true;
+
+            fetch(`/api/events/{{ event.event_id }}/geofencing`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('success', 'Geofencing location updated successfully!');
+
+                        // Refresh the page to show updated coordinates
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        throw new Error(data.message || 'Failed to update geofencing');
+                    }
+                })
+                .catch(error => {
+                    showAlert('danger', error.message);
+                    console.error('Geofencing update error:', error);
+                })
+                .finally(() => {
+                    // Restore button state
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+        });
+
+        // Utility function to show alerts
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <strong>${type === 'success' ? 'Success!' : type === 'danger' ? 'Error!' : 'Info!'}</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            const container = document.querySelector('.content-container .tab-content');
+            container.insertBefore(alertDiv, container.firstChild);
+
+            // Auto-dismiss after 4 seconds
+            setTimeout(() => {
+                if (alertDiv) alertDiv.remove();
+            }, 4000);
+        }
+
+        // Time slots management
+        let timeSlots = [];
+
+        // Load existing time slots
+        function loadTimeSlots() {
+            fetch(`/api/events/{{ event.event_id }}/time-slots`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        timeSlots = data.slots || [];
+                        displayTimeSlots();
+                    }
+                })
+                .catch(error => console.log('Could not load time slots:', error));
+        }
+
+        // Toggle predefined slots visibility
+        function togglePredefinedSlots() {
+            const container = document.getElementById('predefined-slots-container');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // Add predefined slot
+        function addPredefinedSlot(classType, startTime, endTime, description) {
+            // Check if slot already exists
+            const exists = timeSlots.some(slot =>
+                slot.start_time === startTime &&
+                slot.end_time === endTime &&
+                slot.class_type === classType
+            );
+
+            if (exists) {
+                showAlert('warning', 'This time slot is already added!');
+                return;
+            }
+
+            const newSlot = {
+                class_type: classType,
+                start_time: startTime,
+                end_time: endTime,
+                description: description
+            };
+
+            timeSlots.push(newSlot);
+            displayTimeSlots();
+            showAlert('success', `${description} added successfully`);
+        }
+
+        // Modal variables for slot selection
+        let pendingSlotData = {};
+
+        // Show subject slot modal for theory classes
+        function showSubjectSlotModal(classType, startTime, endTime, description) {
+            console.log('showSubjectSlotModal called with:', classType, startTime, endTime, description);
+
+            // Check if Bootstrap is available
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap is not loaded!');
+                alert('Bootstrap is not loaded. Please refresh the page.');
+                return;
+            }
+
+            pendingSlotData = {
+                class_type: classType,
+                start_time: startTime,
+                end_time: endTime,
+                description: description
+            };
+
+            console.log('pendingSlotData set to:', pendingSlotData);
+
+            const modalElement = document.getElementById('subjectSlotModal');
+            if (modalElement) {
+                try {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                    console.log('Modal should be showing now');
+                } catch (error) {
+                    console.error('Error showing modal:', error);
+                    // Fallback: show modal manually
+                    modalElement.style.display = 'block';
+                    modalElement.classList.add('show');
+                    document.body.classList.add('modal-open');
+
+                    // Add backdrop
+                    const backdrop = document.createElement('div');
+                    backdrop.className = 'modal-backdrop fade show';
+                    backdrop.id = 'modal-backdrop-fallback';
+                    document.body.appendChild(backdrop);
+                }
+            } else {
+                console.error('subjectSlotModal element not found');
+                alert('Modal element not found!');
+            }
+        }
+
+        // Show lab slot modal for lab sessions
+        function showLabSlotModal(classType, startTime, endTime, description) {
+            pendingSlotData = {
+                class_type: classType,
+                start_time: startTime,
+                end_time: endTime,
+                description: description
+            };
+
+            const modal = new bootstrap.Modal(document.getElementById('labSlotModal'));
+            modal.show();
+        }
+
+        // Select subject slot and add the time slot
+        function selectSubjectSlot(subjectSlot) {
+            console.log('selectSubjectSlot called with:', subjectSlot);
+            console.log('pendingSlotData:', pendingSlotData);
+
+            // Check if slot already exists
+            const exists = timeSlots.some(slot =>
+                slot.start_time === pendingSlotData.start_time &&
+                slot.end_time === pendingSlotData.end_time &&
+                slot.class_type === pendingSlotData.class_type &&
+                slot.subject_slot === subjectSlot
+            );
+
+            if (exists) {
+                showAlert('warning', `${pendingSlotData.description} - ${subjectSlot} is already added!`);
+                return;
+            }
+
+            const newSlot = {
+                class_type: pendingSlotData.class_type,
+                start_time: pendingSlotData.start_time,
+                end_time: pendingSlotData.end_time,
+                description: `${pendingSlotData.description} - ${subjectSlot}`,
+                subject_slot: subjectSlot
+            };
+
+            console.log('Adding new slot:', newSlot);
+            timeSlots.push(newSlot);
+
+            // Wait a bit before updating display to ensure DOM is ready
+            setTimeout(() => {
+                displayTimeSlots();
+            }, 100);
+
+            showAlert('success', `${pendingSlotData.description} - ${subjectSlot} added successfully`);
+
+            // Hide modal
+            const modalElement = document.getElementById('subjectSlotModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            } else {
+                // Fallback: create new modal instance and hide
+                const newModal = new bootstrap.Modal(modalElement);
+                newModal.hide();
+            }
+        }
+
+        // Select lab slot and add the time slot
+        function selectLabSlot(labSlot) {
+            // Check if slot already exists
+            const exists = timeSlots.some(slot =>
+                slot.start_time === pendingSlotData.start_time &&
+                slot.end_time === pendingSlotData.end_time &&
+                slot.class_type === pendingSlotData.class_type &&
+                slot.lab_slot === labSlot
+            );
+
+            if (exists) {
+                showAlert('warning', `${pendingSlotData.description} - ${labSlot} is already added!`);
+                return;
+            }
+
+            const newSlot = {
+                class_type: pendingSlotData.class_type,
+                start_time: pendingSlotData.start_time,
+                end_time: pendingSlotData.end_time,
+                description: `${pendingSlotData.description} - ${labSlot}`,
+                lab_slot: labSlot
+            };
+
+            timeSlots.push(newSlot);
+            displayTimeSlots();
+            showAlert('success', `${pendingSlotData.description} - ${labSlot} added successfully`);
+
+            // Hide modal
+            const modalElement = document.getElementById('labSlotModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            } else {
+                // Fallback: create new modal instance and hide
+                const newModal = new bootstrap.Modal(modalElement);
+                newModal.hide();
+            }
+        }
+
+        // Display time slots
+        function displayTimeSlots() {
+            console.log('displayTimeSlots called, timeSlots:', timeSlots);
+
+            // Ensure we're on the correct tab first
+            const settingsTab = document.getElementById('settings-tab');
+            if (settingsTab && !settingsTab.classList.contains('active')) {
+                console.log('Settings tab is not active, activating it...');
+                settingsTab.click();
+            }
+
+            const slotsList = document.getElementById('slots-list');
+            const noSlotsMessage = document.getElementById('no-slots-message');
+
+            console.log('slotsList:', slotsList);
+            console.log('noSlotsMessage:', noSlotsMessage);
+
+            if (!slotsList) {
+                console.error('slots-list element not found - trying alternative approach');
+                // Try to find it within the settings tab content
+                const settingsPane = document.getElementById('settings');
+                if (settingsPane) {
+                    const slotsListInPane = settingsPane.querySelector('#slots-list');
+                    console.log('Found slots-list in settings pane:', slotsListInPane);
+                    if (slotsListInPane) {
+                        updateSlotsList(slotsListInPane, timeSlots);
+                        return;
+                    }
+                }
+                return;
+            }
+
+            // Update the slots list using helper function
+            updateSlotsList(slotsList, timeSlots);
+
+            // Also update the visibility of the no-slots message
+            if (noSlotsMessage) {
+                noSlotsMessage.style.display = timeSlots.length === 0 ? 'block' : 'none';
+            }
+        }
+
+        // Helper function to update slots list
+        function updateSlotsList(slotsListElement, slots) {
+            if (!slotsListElement) return;
+
+            if (slots.length === 0) {
+                slotsListElement.innerHTML = '<div class="alert alert-info">No time slots configured yet. Add slots below.</div>';
+            } else {
+                slotsListElement.innerHTML = slots.map((slot, index) => {
+                    let slotInfo = '';
+                    if (slot.subject_slot) {
+                        slotInfo = `<span class="badge bg-info ms-1">${slot.subject_slot}</span>`;
+                    } else if (slot.lab_slot) {
+                        slotInfo = `<span class="badge bg-warning ms-1">${slot.lab_slot}</span>`;
+                    }
+
+                    return `
+                        <div class="card mb-2">
+                            <div class="card-body py-2">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <span class="badge bg-${slot.class_type === 'Theory' ? 'primary' : 'success'}">${slot.class_type}</span>
+                                        ${slotInfo}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>${slot.start_time} - ${slot.end_time}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">${slot.description || ''}</small>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <button class="btn btn-sm btn-danger" onclick="removeTimeSlot(${index})">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Add time slot
+        document.getElementById('add-slot-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            const newSlot = {
+                class_type: formData.get('class_type'),
+                start_time: formData.get('start_time'),
+                end_time: formData.get('end_time')
+            };
+
+            // Validate times
+            if (newSlot.start_time >= newSlot.end_time) {
+                showAlert('danger', 'End time must be after start time');
+                return;
+            }
+
+            // Check for overlapping slots
+            const hasOverlap = timeSlots.some(slot => {
+                return (newSlot.start_time < slot.end_time && newSlot.end_time > slot.start_time);
+            });
+
+            if (hasOverlap) {
+                showAlert('warning', 'This time slot overlaps with an existing slot');
+                return;
+            }
+
+            timeSlots.push(newSlot);
+            this.reset();
+            displayTimeSlots();
+            showAlert('success', 'Time slot added successfully');
+        });
+
+        // Remove time slot
+        function removeTimeSlot(index) {
+            timeSlots.splice(index, 1);
+            displayTimeSlots();
+            showAlert('info', 'Time slot removed');
+        }
+
+        // Save time slots
+        function saveTimeSlots() {
+            const btn = document.querySelector('button[onclick="saveTimeSlots()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            fetch(`/api/events/{{ event.event_id }}/time-slots`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ slots: timeSlots })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('success', 'Time slots saved successfully!');
+                    } else {
+                        throw new Error(data.message || 'Failed to save time slots');
+                    }
+                })
+                .catch(error => {
+                    showAlert('danger', error.message);
+                    console.error('Time slots save error:', error);
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        }
+
+        // Event editing functions
+        function resetForm() {
+            document.getElementById('eventEditForm').reset();
+            // Reload original values
+            document.getElementById('eventName').value = {{ event.event_name|tojson }};
+            document.getElementById('eventDescription').value = {{ (event.event_description or "")|tojson }};
+            document.getElementById('eventDate').value = {{ event.event_date|tojson }};
+            document.getElementById('eventTime').value = {{ event.event_time|tojson }};
+            document.getElementById('eventLocation').value = {{ event.event_location|tojson }};
+            document.getElementById('maxAttendees').value = {{ (event.max_attendees or "")|tojson }};
+
+            // Reset checkboxes
+            var allowNewRegCheckbox = document.getElementById('allowNewRegistrations');
+            if (allowNewRegCheckbox) {
+                allowNewRegCheckbox.checked = {{ (event.registration_open or False)|tojson }};
+            }
+
+            showAlert('info', 'Form reset to original values');
+        }
+
+        function submitEventEdit(e) {
+            e.preventDefault();
+
+            const formData = {
+                event_name: document.getElementById('eventName').value.trim(),
+                description: document.getElementById('eventDescription').value.trim(),
+                event_date: document.getElementById('eventDate').value,
+                event_time: document.getElementById('eventTime').value,
+                location: document.getElementById('eventLocation').value.trim(),
+                max_attendees: document.getElementById('maxAttendees').value ? parseInt(document.getElementById('maxAttendees').value) : null,
+                registration_open: document.getElementById('allowNewRegistrations').checked
+            };
+
+            // Validation
+            if (!formData.event_name) {
+                showAlert('danger', 'Event name is required');
+                return;
+            }
+            if (!formData.event_date || !formData.event_time) {
+                showAlert('danger', 'Event date and time are required');
+                return;
+            }
+            if (!formData.location) {
+                showAlert('danger', 'Event location is required');
+                return;
+            }
+
+            // Submit form
+            const submitBtn = document.querySelector('#eventEditForm button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+            submitBtn.disabled = true;
+
+            fetch(`/api/events/{{ event.event_id }}/edit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('success', 'Event details updated successfully!');
+                        // Optionally reload page to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        throw new Error(data.message || 'Failed to update event details');
+                    }
+                })
+                .catch(error => {
+                    showAlert('danger', error.message);
+                    console.error('Event update error:', error);
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+        }
+
+        // Load time slots on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadTimeSlots();
+
+            // Set up event editing form
+            document.getElementById('eventEditForm').addEventListener('submit', submitEventEdit);
+
+            // Make sure global functions are available for onclick handlers
+            window.showSubjectSlotModal = showSubjectSlotModal;
+            window.showLabSlotModal = showLabSlotModal;
+            window.selectSubjectSlot = selectSubjectSlot;
+            window.selectLabSlot = selectLabSlot;
+            window.togglePredefinedSlots = togglePredefinedSlots;
+            window.removeTimeSlot = removeTimeSlot;
+            window.saveTimeSlots = saveTimeSlots;
+            window.resetForm = resetForm;
+
+            console.log('Time slots management and event editing initialized');
+        });
+    </script>
+</body>
+
+</html>
